@@ -1,5 +1,6 @@
-using WebApi.Models;
 using Microsoft.EntityFrameworkCore;
+using WebApi.Data;
+using WebApi.Services;
 
 namespace WebApi;
 
@@ -13,11 +14,14 @@ internal static class Program
 
         _ = builder.Services.AddDbContext<TodoListDbContext>(options => options.UseSqlServer(connectionString));
 
+        _ = builder.Services.AddScoped<ITodoListDatabaseService, TodoListDatabaseService>();
+
         _ = builder.Services.AddControllers();
         _ = builder.Services.AddEndpointsApiExplorer();
         _ = builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
+        Console.WriteLine("ConnectionString: " + builder.Configuration.GetConnectionString("TodoListDb"));
 
         if (app.Environment.IsDevelopment())
         {
