@@ -15,6 +15,7 @@ internal static class Program
         _ = builder.Services.AddDbContext<TodoListDbContext>(options => options.UseSqlServer(connectionString));
 
         _ = builder.Services.AddScoped<ITodoListDatabaseService, TodoListDatabaseService>();
+        _ = builder.Services.AddScoped<ITaskService, TaskService>();
 
         _ = builder.Services.AddControllers();
         _ = builder.Services.AddEndpointsApiExplorer();

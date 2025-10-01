@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-
 namespace WebApi.Models;
 
 public class TodoListDto
@@ -10,5 +8,5 @@ public class TodoListDto
 
     public string Description { get; set; } = string.Empty;
 
-    public ReadOnlyCollection<TaskDto> Tasks { get; set; } = new ReadOnlyCollection<TaskDto>(new List<TaskDto>());
+    public List<TaskDto> Tasks { get; set; } = new List<TaskDto>();
 }

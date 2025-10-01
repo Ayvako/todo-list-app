@@ -1,6 +1,7 @@
-using System.Collections.ObjectModel;
-
 namespace WebApi.Models;
+
+#pragma warning disable CA1002
+#pragma warning disable CA2227
 
 public class TaskDto
 {
@@ -18,7 +19,7 @@ public class TaskDto
 
     public string Assignee { get; set; } = string.Empty;
 
-    public ReadOnlyCollection<string> Tags { get; } = new ReadOnlyCollection<string>(new List<string>());
+    public List<TaskTagDto> Tags { get; } = new List<TaskTagDto>();
 
-    public ReadOnlyCollection<string> Comments { get; set; } = new ReadOnlyCollection<string>(new List<string>());
+    public List<TaskCommentDto> Comments { get; set; } = new List<TaskCommentDto>();
 }

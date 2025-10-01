@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Data;
 using WebApi.Models;
@@ -6,9 +5,6 @@ using WebApi.Services.Models;
 
 namespace WebApi.Services;
 
-#pragma warning disable IDE0079 // Remove unnecessary suppression
-
-[SuppressMessage("Maintainability", "CA1515", Justification = "Controllers must be public for Swagger to work")]
 public class TodoListDatabaseService : ITodoListDatabaseService
 {
     private readonly TodoListDbContext db;
@@ -20,7 +16,7 @@ public class TodoListDatabaseService : ITodoListDatabaseService
 
     public async Task<IEnumerable<TodoList>> GetAllAsync()
     {
-        var entities = await this.db.TodoLists.AsNoTracking().ToListAsync();
+        var entities = await this.db.TodoLists.Include(l => l.Tasks).AsNoTracking().ToListAsync();
         return entities.Select(MapToDto);
     }
 

@@ -1,16 +1,12 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
 using WebApi.Services;
 using WebApi.Services.Models;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-#pragma warning disable IDE0079 // Remove unnecessary suppression
-[SuppressMessage("Maintainability", "CA1515", Justification = "Controllers must be public for Swagger to work")]
 public class TodoListController : ControllerBase
 {
     private readonly ITodoListDatabaseService service;

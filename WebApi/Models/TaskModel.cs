@@ -16,7 +16,7 @@ public class TaskModel
 
     public string Assignee { get; set; } = string.Empty;
 
-    public List<string> Tags { get; set; } = new();
+    public List<string> Tags { get; set; } = new List<string>();
 
-    public List<string> Comments { get; set; } = new();
+    public List<TaskCommentModel> Comments { get; set; } = new List<TaskCommentModel>();
 }

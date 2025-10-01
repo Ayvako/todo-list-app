@@ -1,10 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace WebApi.Models;
 
-#pragma warning disable IDE0079 // Remove unnecessary suppression
-
-[SuppressMessage("Maintainability", "CA1515", Justification = "Controllers must be public for Swagger to work")]
 public class TaskEntity
 {
     public int Id { get; set; }
@@ -25,7 +20,7 @@ public class TaskEntity
 
     public TodoListEntity TodoList { get; set; } = null!;
 
-    public List<TaskTagEntity> Tags { get; set; } = new();
+    public List<TaskTagEntity> Tags { get; } = new List<TaskTagEntity>();
 
-    public List<TaskCommentEntity> Comments { get; set; } = new();
+    public List<TaskCommentEntity> Comments { get; } = new List<TaskCommentEntity>();
 }

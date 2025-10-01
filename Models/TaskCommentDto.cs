@@ -1,16 +1,14 @@
 namespace WebApi.Models;
 
-public class TaskCommentEntity
+public class TaskCommentDto
 {
     public int Id { get; set; }
 
     public string Text { get; set; } = string.Empty;
 
-    public string User { get; set; } = string.Empty;
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public int TaskId { get; set; }
 
-    public TaskEntity Task { get; set; } = null!;
+    public TaskDto Task { get; set; } = null!;
 }

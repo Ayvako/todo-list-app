@@ -1,0 +1,41 @@
+@model WebApp.Models.TodoListWebApiModel
+
+@{
+    ViewData["Title"] = "Todo List Details";
+}
+
+<h2>@Model.Title</h2>
+
+<p>@Model.Description</p>
+
+@if (Model.Tasks != null && Model.Tasks.Any())
+{
+    <h4>Tasks</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Assignee</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in Model.Tasks)
+            {
+                <tr>
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td>@task.Status</td>
+                    <td>@task.Assignee</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No tasks in this list.</p>
+}
+
+<a asp-action="Index" class="btn btn-secondary">Back to List</a>

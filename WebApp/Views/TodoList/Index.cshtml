@@ -1,0 +1,111 @@
+@model IEnumerable<WebApp.Models.TodoListWebApiModel>
+
+@{
+    ViewData["Title"] = "Todo Lists";
+}
+
+<h2>Todo Lists</h2>
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-success">Add Todo List</a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    @foreach (var list in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm position-relative">
+
+                <!-- Delete list -->
+                <form asp-action="Delete" asp-route-id="@list.Id" method="post"
+                      class="position-absolute top-0 end-0 m-2">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Delete list"
+                            onclick="return confirm('Delete this list?');">
+                        &times;
+                    </button>
+                </form>
+
+                <!-- Edit list -->
+                <a asp-action="Edit" asp-route-id="@list.Id"
+                   class="btn btn-sm btn-outline-primary position-absolute top-0 end-0 me-5 mt-2"
+                   title="Edit list">
+                    <i class="bi bi-pencil"></i>
+                </a>
+
+                <div class="card-body">
+                    <h5 class="card-title">@list.Title</h5>
+                    <p class="card-text">@list.Description</p>
+
+                    <!-- Add task -->
+                    <a asp-controller="Task" asp-action="Add" asp-route-todoListId="@list.Id"
+                       class="btn btn-sm btn-outline-success mb-2">Add Task</a>
+
+                    <button class="btn btn-sm btn-outline-secondary mb-2" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#tasks-@list.Id">
+                        Show Tasks (@(list.Tasks?.Count ?? 0))
+                    </button>
+
+                    <div class="collapse" id="tasks-@list.Id">
+                        @if (list.Tasks != null && list.Tasks.Any())
+                        {
+                            <div class="row g-2 mt-2">
+                                @foreach (var task in list.Tasks)
+                                {
+                                    <div class="col-12">
+                                        <div class="card shadow-sm">
+                                            <div class="card-body d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="fw-bold">@task.Title</div>
+                                                    <div class="text-muted">@task.Description</div>
+                                                    <small class="text-muted">Due: @task.DueDate.ToShortDateString()</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge @GetStatusBadgeClass(task.Status) rounded-pill">@task.Status</span>
+
+                                                    <!-- Edit task -->
+                                                    <a asp-controller="Task" asp-action="Edit" asp-route-id="@task.Id"
+                                                       class="btn btn-sm btn-outline-primary ms-2">✎</a>
+
+                                                    <!-- Delete task -->
+                                                    <form asp-controller="Task" asp-action="Delete" asp-route-id="@task.Id"
+                                                          method="post" class="d-inline ms-2">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                onclick="return confirm('Delete this task?');">
+                                                            &times;
+                                                        </button>
+                                                    </form>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mt-2">No tasks yet</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-footer text-end">
+                    <a asp-action="Details" asp-route-id="@list.Id" class="btn btn-primary btn-sm">Details</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    private string GetStatusBadgeClass(WebApi.Models.TaskStatus status)
+    {
+        return status switch
+        {
+            WebApi.Models.TaskStatus.NotStarted => "bg-secondary",
+            WebApi.Models.TaskStatus.InProgress => "bg-warning text-dark",
+            WebApi.Models.TaskStatus.Completed => "bg-success",
+            _ => "bg-dark"
+        };
+    }
+}

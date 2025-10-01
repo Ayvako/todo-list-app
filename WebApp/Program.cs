@@ -1,3 +1,5 @@
+using WebApp.Services;
+
 namespace WebApp;
 
 internal static class Program
@@ -6,16 +8,25 @@ internal static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
         _ = builder.Services.AddControllersWithViews();
+
+        _ = builder.Services.AddHttpClient<ITodoListWebApiService, TodoListWebApiService>(client =>
+        {
+            var baseUrl = builder.Configuration["WebApi:BaseUrl"];
+            client.BaseAddress = new Uri(baseUrl);
+        });
+
+        _ = builder.Services.AddHttpClient<ITaskWebApiService, TaskWebApiService>(client =>
+        {
+            var baseUrl = builder.Configuration["WebApi:BaseUrl"];
+            client.BaseAddress = new Uri(baseUrl);
+        });
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
         {
             _ = app.UseExceptionHandler("/Home/Error");
-            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             _ = app.UseHsts();
         }
 
@@ -26,7 +37,9 @@ internal static class Program
 
         _ = app.UseAuthorization();
 
-        _ = app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
+        _ = app.MapControllerRoute(
+            name: "default",
+            pattern: "{controller=Home}/{action=Index}/{id?}");
 
         app.Run();
     }

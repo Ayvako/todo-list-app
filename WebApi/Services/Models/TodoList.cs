@@ -1,11 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using WebApi.Models;
 
 namespace WebApi.Services.Models;
 
-#pragma warning disable IDE0079 // Remove unnecessary suppression
-
-[SuppressMessage("Maintainability", "CA1515", Justification = "Controllers must be public for Swagger to work")]
 public class TodoList
 {
     public int Id { get; set; }

@@ -4,5 +4,8 @@
         <AnalysisMode>AllEnabledByDefault</AnalysisMode>
         <AnalysisLevel>latest</AnalysisLevel>
         <CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
+        <NoWarn>$(NoWarn);CA1515</NoWarn>
+        <NoWarn>$(NoWarn);CA2227</NoWarn>
+        <NoWarn>$(NoWarn);CA1002</NoWarn>
     </PropertyGroup>
 </Project>
