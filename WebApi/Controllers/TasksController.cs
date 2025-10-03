@@ -1,80 +1,75 @@
+using Application.Services;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Models;
-using WebApi.Services;
-
-namespace WebApi.Controllers;
+using WebApp.Models.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
-    private readonly ITaskService service;
+    private readonly ITaskService taskService;
 
     public TasksController(ITaskService taskService)
     {
-        this.service = taskService;
+        this.taskService = taskService;
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TaskModel>> GetTaskById(int id)
+    public async Task<ActionResult<TaskWebApiModel>> GetTaskById(int id)
     {
-        var task = await this.service.GetTaskByIdAsync(id);
+        var task = await taskService.GetTaskByIdAsync(id);
         if (task == null)
         {
-            return this.NotFound();
+            return NotFound();
         }
 
-        return this.Ok(task);
+        return Ok(task);
     }
 
     [HttpPost("{todoListId}/tasks")]
-    public async Task<ActionResult<TaskModel>> AddTask(int todoListId, [FromBody] TaskCreateModel model)
+    public async Task<ActionResult<TaskWebApiModel>> AddTask(int todoListId, [FromBody] TaskCreateModel model)
     {
-        if (!this.ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            return this.BadRequest(this.ModelState);
+            return BadRequest(ModelState);
         }
 
         try
         {
-            var task = await this.service.AddTaskAsync(todoListId, model);
-
-            return this.CreatedAtAction(nameof(this.GetTaskById), new { id = task.Id }, task);
+            var task = await taskService.AddTaskAsync(todoListId, model);
+            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
         }
         catch (KeyNotFoundException)
         {
-            return this.NotFound();
+            return NotFound();
         }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<TaskWebApiModel>> EditTask(int id, [FromBody] TaskEditModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var updated = await taskService.UpdateTaskAsync(id, model);
+        if (updated == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(updated);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
-        var result = await this.service.DeleteTaskAsync(id);
-
-        if (!result)
+        var deleted = await taskService.DeleteTaskAsync(id);
+        if (!deleted)
         {
-            return this.NotFound();
+            return NotFound();
         }
 
-        return this.NoContent();
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<TaskModel>> EditTask(int id, [FromBody] TaskEditModel model)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return this.BadRequest(this.ModelState);
-        }
-
-        var updated = await this.service.UpdateTaskAsync(id, model);
-
-        if (updated == null)
-        {
-            return this.NotFound();
-        }
-
-        return this.Ok(updated);
+        return NoContent();
     }
 }

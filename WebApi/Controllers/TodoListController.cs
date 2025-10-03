@@ -1,7 +1,8 @@
+using Application.Services;
+using Contracts.TodoLists;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Models;
-using WebApi.Services;
-using WebApi.Services.Models;
+using WebApp.Models.Tasks;
+using WebApp.Models.TodoLists;
 
 namespace WebApi.Controllers;
 
@@ -9,75 +10,56 @@ namespace WebApi.Controllers;
 [Route("api/[controller]")]
 public class TodoListController : ControllerBase
 {
-    private readonly ITodoListDatabaseService service;
+    private readonly ITodoListService service;
 
-    public TodoListController(ITodoListDatabaseService service)
+    public TodoListController(ITodoListService service)
     {
         this.service = service;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TodoList>>> GetAll()
-    {
-        var result = await this.service.GetAllAsync();
-        return this.Ok(result);
-    }
+    public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetAll()
+        => Ok(await service.GetAllAsync());
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TodoList>> GetById(int id)
+    public async Task<ActionResult<TodoListWebApiModel>> GetById(int id)
     {
-        var result = await this.service.GetByIdAsync(id);
-        if (result == null)
-        {
-            return this.NotFound();
-        }
-
-        return this.Ok(result);
+        var list = await service.GetByIdAsync(id);
+        return list == null ? NotFound() : Ok(list);
     }
 
     [HttpGet("{id}/tasks")]
-    public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasks(int id)
+    public async Task<ActionResult<IEnumerable<TaskWebApiModel>>> GetTasks(int id)
     {
-        var tasks = await this.service.GetTasksByListIdAsync(id);
-
-        if (!tasks.Any())
-        {
-            return this.NotFound();
-        }
-
-        return this.Ok(tasks);
+        var tasks = await service.GetTasksByListIdAsync(id);
+        return tasks.Any() ? Ok(tasks) : NotFound();
     }
 
     [HttpPost]
-    public async Task<ActionResult<TodoList>> Add([FromBody] TodoListModel model)
+    public async Task<ActionResult<TodoListWebApiModel>> Add([FromBody] TodoListCreateDto model)
     {
-        var created = await this.service.AddAsync(model);
-        return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, created);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var created = await service.AddAsync(model);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TodoList>> Update(int id, [FromBody] TodoListModel model)
+    public async Task<ActionResult<TodoListWebApiModel>> Update(int id, [FromBody] TodoListUpdateDto model)
     {
-        var updated = await this.service.UpdateAsync(id, model);
-
-        if (updated == null)
+        if (!ModelState.IsValid)
         {
-            return this.NotFound();
+            return BadRequest(ModelState);
         }
 
-        return this.Ok(updated);
+        var updated = await service.UpdateAsync(id, model);
+        return updated == null ? NotFound() : Ok(updated);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
-    {
-        var deleted = await this.service.DeleteAsync(id);
-
-        if (!deleted)
-        {
-            return this.NotFound();
-        }
-
-        return this.Ok();
-    }
+        => await service.DeleteAsync(id) ? Ok() : NotFound();
 }

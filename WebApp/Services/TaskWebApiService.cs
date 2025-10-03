@@ -1,4 +1,4 @@
-using WebApp.Models;
+using WebApp.Models.Tasks;
 
 namespace WebApp.Services;
 
@@ -44,6 +44,7 @@ public class TaskWebApiService : ITaskWebApiService
             Description = model.Description,
             DueDate = model.DueDate,
             Status = model.Status,
+            Assignee = model.Assignee,
         });
 
         if (!response.IsSuccessStatusCode)

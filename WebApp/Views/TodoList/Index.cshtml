@@ -1,4 +1,5 @@
-@model IEnumerable<WebApp.Models.TodoListWebApiModel>
+@using WebApp.Models.TodoLists
+@model IEnumerable<TodoListWebApiModel>
 
 @{
     ViewData["Title"] = "Todo Lists";
@@ -98,13 +99,14 @@
 </div>
 
 @functions {
-    private string GetStatusBadgeClass(WebApi.Models.TaskStatus status)
+
+    private string GetStatusBadgeClass(Core.Enums.TaskStatus status)
     {
         return status switch
         {
-            WebApi.Models.TaskStatus.NotStarted => "bg-secondary",
-            WebApi.Models.TaskStatus.InProgress => "bg-warning text-dark",
-            WebApi.Models.TaskStatus.Completed => "bg-success",
+        Core.Enums.TaskStatus.NotStarted => "bg-secondary",
+        Core.Enums.TaskStatus.InProgress => "bg-warning text-dark",
+        Core.Enums.TaskStatus.Completed => "bg-success",
             _ => "bg-dark"
         };
     }

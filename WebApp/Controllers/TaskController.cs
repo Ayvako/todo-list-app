@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using WebApp.Models;
+using WebApp.Models.Tasks;
 using WebApp.Services;
 
 namespace WebApp.Controllers;
