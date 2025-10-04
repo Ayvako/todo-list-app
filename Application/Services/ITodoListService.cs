@@ -17,4 +17,8 @@ public interface ITodoListService
     Task<TodoListWebApiModel?> UpdateAsync(int id, TodoListUpdateDto model);
 
     Task<bool> DeleteAsync(int id);
+
+    Task<bool> CanEditAsync(int todoListId, int userId);
+
+    Task<bool> CanViewAsync(int todoListId, int userId);
 }

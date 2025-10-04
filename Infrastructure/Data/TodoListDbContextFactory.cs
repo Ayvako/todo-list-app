@@ -9,7 +9,7 @@ namespace Infrastructure.Data
         public TodoListDbContext CreateDbContext(string[] args)
         {
             IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../WebApi"))
                 .AddJsonFile("appsettings.json")
                 .Build();
 

@@ -19,47 +19,47 @@ public class TodoListController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetAll()
-        => Ok(await service.GetAllAsync());
+        => this.Ok(await this.service.GetAllAsync());
 
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoListWebApiModel>> GetById(int id)
     {
-        var list = await service.GetByIdAsync(id);
-        return list == null ? NotFound() : Ok(list);
+        var list = await this.service.GetByIdAsync(id);
+        return list == null ? this.NotFound() : this.Ok(list);
     }
 
     [HttpGet("{id}/tasks")]
     public async Task<ActionResult<IEnumerable<TaskWebApiModel>>> GetTasks(int id)
     {
-        var tasks = await service.GetTasksByListIdAsync(id);
-        return tasks.Any() ? Ok(tasks) : NotFound();
+        var tasks = await this.service.GetTasksByListIdAsync(id);
+        return tasks.Any() ? this.Ok(tasks) : this.NotFound();
     }
 
     [HttpPost]
     public async Task<ActionResult<TodoListWebApiModel>> Add([FromBody] TodoListCreateDto model)
     {
-        if (!ModelState.IsValid)
+        if (!this.ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.BadRequest(this.ModelState);
         }
 
-        var created = await service.AddAsync(model);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var created = await this.service.AddAsync(model);
+        return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult<TodoListWebApiModel>> Update(int id, [FromBody] TodoListUpdateDto model)
     {
-        if (!ModelState.IsValid)
+        if (!this.ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.BadRequest(this.ModelState);
         }
 
-        var updated = await service.UpdateAsync(id, model);
-        return updated == null ? NotFound() : Ok(updated);
+        var updated = await this.service.UpdateAsync(id, model);
+        return updated == null ? this.NotFound() : this.Ok(updated);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
-        => await service.DeleteAsync(id) ? Ok() : NotFound();
+        => await this.service.DeleteAsync(id) ? this.Ok() : this.NotFound();
 }

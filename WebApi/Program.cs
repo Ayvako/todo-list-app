@@ -21,6 +21,7 @@ internal static class Program
 
         _ = builder.Services.AddScoped<ITodoListService, TodoListService>();
         _ = builder.Services.AddScoped<ITaskService, TaskService>();
+        _ = builder.Services.AddScoped<IUserService, UserService>();
 
         _ = builder.Services.AddControllers();
 

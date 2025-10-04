@@ -1,4 +1,4 @@
-using Core.Entities.User;
+using Core.Entities.TodoUser;
 
 namespace Core.Entities.Task;
 

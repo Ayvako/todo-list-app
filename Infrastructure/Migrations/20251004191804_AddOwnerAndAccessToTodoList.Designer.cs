@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(TodoListDbContext))]
-    [Migration("20251002184647_USER")]
-    partial class USER
+    [Migration("20251004191804_AddOwnerAndAccessToTodoList")]
+    partial class AddOwnerAndAccessToTodoList
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Core.Entities.TaskCommentEntity", b =>
+            modelBuilder.Entity("Core.Entities.Task.TaskCommentEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -55,7 +55,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskEntity", b =>
+            modelBuilder.Entity("Core.Entities.Task.TaskEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -87,14 +87,19 @@ namespace Infrastructure.Migrations
                     b.Property<int>("TodoListId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserEntityId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TodoListId");
 
+                    b.HasIndex("UserEntityId");
+
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskTagEntity", b =>
+            modelBuilder.Entity("Core.Entities.Task.TaskTagEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -116,7 +121,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("TaskTagEntity");
                 });
 
-            modelBuilder.Entity("Core.Entities.TodoListEntity", b =>
+            modelBuilder.Entity("Core.Entities.TodoList.TodoListEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -128,16 +133,24 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UserEntityId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserEntityId");
 
                     b.ToTable("TodoLists");
                 });
 
-            modelBuilder.Entity("Core.Entities.UserEntity", b =>
+            modelBuilder.Entity("Core.Entities.TodoListAccessEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -145,24 +158,63 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Name")
+                    b.Property<int>("AccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TodoListId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TodoListId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TodoListAccesses");
+                });
+
+            modelBuilder.Entity("Core.Entities.TodoUser.UserEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskCommentEntity", b =>
+            modelBuilder.Entity("Core.Entities.Task.TaskCommentEntity", b =>
                 {
-                    b.HasOne("Core.Entities.TaskEntity", "Task")
+                    b.HasOne("Core.Entities.Task.TaskEntity", "Task")
                         .WithMany("Comments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.UserEntity", "User")
+                    b.HasOne("Core.Entities.TodoUser.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -173,20 +225,24 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskEntity", b =>
+            modelBuilder.Entity("Core.Entities.Task.TaskEntity", b =>
                 {
-                    b.HasOne("Core.Entities.TodoListEntity", "TodoList")
+                    b.HasOne("Core.Entities.TodoList.TodoListEntity", "TodoList")
                         .WithMany("Tasks")
                         .HasForeignKey("TodoListId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Core.Entities.TodoUser.UserEntity", null)
+                        .WithMany("AssignedTasks")
+                        .HasForeignKey("UserEntityId");
+
                     b.Navigation("TodoList");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskTagEntity", b =>
+            modelBuilder.Entity("Core.Entities.Task.TaskTagEntity", b =>
                 {
-                    b.HasOne("Core.Entities.TaskEntity", "Task")
+                    b.HasOne("Core.Entities.Task.TaskEntity", "Task")
                         .WithMany("Tags")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -195,16 +251,49 @@ namespace Infrastructure.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskEntity", b =>
+            modelBuilder.Entity("Core.Entities.TodoList.TodoListEntity", b =>
+                {
+                    b.HasOne("Core.Entities.TodoUser.UserEntity", null)
+                        .WithMany("OwnedLists")
+                        .HasForeignKey("UserEntityId");
+                });
+
+            modelBuilder.Entity("Core.Entities.TodoListAccessEntity", b =>
+                {
+                    b.HasOne("Core.Entities.TodoList.TodoListEntity", "TodoList")
+                        .WithMany()
+                        .HasForeignKey("TodoListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.TodoUser.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TodoList");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Core.Entities.Task.TaskEntity", b =>
                 {
                     b.Navigation("Comments");
 
                     b.Navigation("Tags");
                 });
 
-            modelBuilder.Entity("Core.Entities.TodoListEntity", b =>
+            modelBuilder.Entity("Core.Entities.TodoList.TodoListEntity", b =>
                 {
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Core.Entities.TodoUser.UserEntity", b =>
+                {
+                    b.Navigation("AssignedTasks");
+
+                    b.Navigation("OwnedLists");
                 });
 #pragma warning restore 612, 618
         }

@@ -12,5 +12,5 @@ public class TaskCommentDto
 
     public TaskDto Task { get; set; } = null!;
 
-    public string User { get; set; }
+    public string User { get; set; } = null!;
 }

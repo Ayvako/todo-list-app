@@ -11,4 +11,6 @@ public class TodoListWebApiModel
     public string? Description { get; set; }
 
     public List<TaskWebApiModel> Tasks { get; set; } = new List<TaskWebApiModel>();
+
+    public bool CanEdit { get; set; }
 }

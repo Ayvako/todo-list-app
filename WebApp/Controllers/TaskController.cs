@@ -112,6 +112,6 @@ public class TaskController : Controller
             return this.View(model);
         }
 
-        return this.RedirectToAction("Index", "TodoList"); // Можно вернуться к списку
+        return this.RedirectToAction("Index", "TodoList");
     }
 }

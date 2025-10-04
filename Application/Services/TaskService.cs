@@ -15,6 +15,8 @@ public class TaskService : ITaskService
 
     public async Task<TaskWebApiModel> AddTaskAsync(int todoListId, TaskCreateModel model)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         var entity = new TaskEntity
         {
             Title = model.Title,
@@ -23,19 +25,21 @@ public class TaskService : ITaskService
             Assignee = model.Assignee,
         };
 
-        var added = await repository.AddTaskAsync(todoListId, entity);
+        var added = await this.repository.AddTaskAsync(todoListId, entity);
 
         return MapToWebApiModel(added);
     }
 
     public async Task<TaskWebApiModel?> GetTaskByIdAsync(int id)
     {
-        var entity = await repository.GetTaskByIdAsync(id);
+        var entity = await this.repository.GetTaskByIdAsync(id);
         return entity == null ? null : MapToWebApiModel(entity);
     }
 
     public async Task<TaskWebApiModel?> UpdateTaskAsync(int id, TaskEditModel model)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         var entity = new TaskEntity
         {
             Id = model.Id,
@@ -46,13 +50,13 @@ public class TaskService : ITaskService
             Status = model.Status
         };
 
-        var updated = await repository.UpdateTaskAsync(id, entity);
+        var updated = await this.repository.UpdateTaskAsync(id, entity);
         return updated == null ? null : MapToWebApiModel(updated);
     }
 
     public async Task<bool> DeleteTaskAsync(int id)
     {
-        return await repository.DeleteTaskAsync(id);
+        return await this.repository.DeleteTaskAsync(id);
     }
 
     private static TaskWebApiModel MapToWebApiModel(TaskEntity entity)

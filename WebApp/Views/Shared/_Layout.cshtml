@@ -27,6 +27,8 @@
     </style>
 </head>
 <body>
+    @using Microsoft.AspNetCore.Http
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
@@ -35,29 +37,43 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
-                           asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TodoList" ? "active" : "")"
-                           asp-controller="TodoList" asp-action="Index">Todo Lists</a>
-                    </li>
-                </ul>
 
-                <!-- Right side buttons -->
+
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Home" asp-action="About">About</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
-                    </li>
+
+                    @if (Context.Session.GetInt32("UserId") != null)
+                    {
+                        var username = Context.Session.GetString("UserName");
+                        var role = Context.Session.GetString("UserRole");
+
+                        <li class="nav-item d-flex align-items-center text-light me-2">
+                            <span class="navbar-text">
+                                👤 @username (@role)
+                            </span>
+                        </li>
+
+                        <li class="nav-item">
+                            <form asp-controller="User" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-light btn-sm ms-2">Logout</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="User" asp-action="Login">Login</a>
+                        </li>
+                    }
                 </ul>
+
             </div>
         </div>
     </nav>
+
+
 
     <!-- Main content -->
     <main class="container mt-4">

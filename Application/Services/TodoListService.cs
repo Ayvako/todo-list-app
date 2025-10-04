@@ -18,24 +18,26 @@ public class TodoListService : ITodoListService
 
     public async Task<IEnumerable<TodoListWebApiModel>> GetAllAsync()
     {
-        var entities = await repository.GetAllAsync();
+        var entities = await this.repository.GetAllAsync();
         return entities.Select(MapToWebApiModel).ToList();
     }
 
     public async Task<TodoListWebApiModel?> GetByIdAsync(int id)
     {
-        var entity = await repository.GetByIdAsync(id);
+        var entity = await this.repository.GetByIdAsync(id);
         return entity == null ? null : MapToWebApiModel(entity);
     }
 
     public async Task<IEnumerable<TaskWebApiModel>> GetTasksByListIdAsync(int id)
     {
-        var tasks = await repository.GetTasksByListIdAsync(id);
+        var tasks = await this.repository.GetTasksByListIdAsync(id);
         return tasks.Select(MapTaskToWebApiModel).ToList();
     }
 
     public async Task<TodoListWebApiModel> AddAsync(TodoListCreateDto model)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         var entity = new TodoListEntity
         {
             Title = model.Title,
@@ -43,25 +45,49 @@ public class TodoListService : ITodoListService
             Tasks = new List<TaskEntity>()
         };
 
-        var added = await repository.AddAsync(entity);
+        var added = await this.repository.AddAsync(entity);
         return MapToWebApiModel(added);
     }
 
     public async Task<TodoListWebApiModel?> UpdateAsync(int id, TodoListUpdateDto model)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         var entity = new TodoListEntity
         {
             Title = model.Title,
             Description = model.Description
         };
 
-        var updated = await repository.UpdateAsync(id, entity);
+        var updated = await this.repository.UpdateAsync(id, entity);
         return updated == null ? null : MapToWebApiModel(updated);
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        return await repository.DeleteAsync(id);
+        return await this.repository.DeleteAsync(id);
+    }
+
+    public async Task<bool> CanEditAsync(int todoListId, int userId)
+    {
+        var list = await this.repository.GetByIdAsync(todoListId);
+        if (list == null)
+        {
+            return false;
+        }
+
+        return list.OwnerId == userId || (list.EditorIds?.Contains(userId) ?? false);
+    }
+
+    public async Task<bool> CanViewAsync(int todoListId, int userId)
+    {
+        var list = await this.repository.GetByIdAsync(todoListId);
+        if (list == null)
+        {
+            return false;
+        }
+
+        return list.OwnerId == userId || (list.EditorIds?.Contains(userId) ?? false) || (list.ViewerIds?.Contains(userId) ?? false);
     }
 
     private static TodoListWebApiModel MapToWebApiModel(TodoListEntity entity)

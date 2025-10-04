@@ -10,17 +10,24 @@ internal static class Program
 
         _ = builder.Services.AddControllersWithViews();
 
+        var baseUrl = builder.Configuration["WebApi:BaseUrl"];
+
         _ = builder.Services.AddHttpClient<ITodoListWebApiService, TodoListWebApiService>(client =>
         {
-            var baseUrl = builder.Configuration["WebApi:BaseUrl"];
             client.BaseAddress = new Uri(baseUrl);
         });
 
         _ = builder.Services.AddHttpClient<ITaskWebApiService, TaskWebApiService>(client =>
         {
-            var baseUrl = builder.Configuration["WebApi:BaseUrl"];
             client.BaseAddress = new Uri(baseUrl);
         });
+
+        _ = builder.Services.AddHttpClient<IUserWebApiService, UserWebApiService>(client =>
+        {
+            client.BaseAddress = new Uri(baseUrl);
+        });
+
+        _ = builder.Services.AddSession();
 
         var app = builder.Build();
 
@@ -34,12 +41,12 @@ internal static class Program
         _ = app.UseStaticFiles();
 
         _ = app.UseRouting();
-
+        _ = app.UseSession();
         _ = app.UseAuthorization();
 
         _ = app.MapControllerRoute(
             name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
+            pattern: "{controller=TodoList}/{action=Index}/{id?}");
 
         app.Run();
     }

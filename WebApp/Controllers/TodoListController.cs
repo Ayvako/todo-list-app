@@ -13,12 +13,14 @@ public class TodoListController : Controller
         this.service = service;
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         var lists = await this.service.GetAllAsync();
         return this.View(lists);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
         if (!this.ModelState.IsValid)
