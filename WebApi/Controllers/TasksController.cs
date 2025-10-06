@@ -1,4 +1,7 @@
-using Application.Services;
+using System.Security.Claims;
+using Application.Services.Interfaces;
+using Contracts.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Models.Tasks;
 
@@ -6,6 +9,7 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TasksController : ControllerBase
 {
     private readonly ITaskService taskService;
@@ -15,63 +19,61 @@ public class TasksController : ControllerBase
         this.taskService = taskService;
     }
 
+    private int GetUserId() =>
+        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskWebApiModel>> GetTaskById(int id)
     {
-        var task = await this.taskService.GetTaskByIdAsync(id);
-        if (task == null)
-        {
-            return this.NotFound();
-        }
-
-        return this.Ok(task);
+        var task = await taskService.GetTaskByIdAsync(id);
+        return task == null ? NotFound() : Ok(task);
     }
 
     [HttpPost("{todoListId}/tasks")]
-    public async Task<ActionResult<TaskWebApiModel>> AddTask(int todoListId, [FromBody] TaskCreateModel model)
+    public async Task<ActionResult<TaskWebApiModel>> AddTask(int todoListId, [FromBody] TaskCreateDto model)
     {
-        if (!this.ModelState.IsValid)
-        {
-            return this.BadRequest(this.ModelState);
-        }
+        var userId = GetUserId();
 
         try
         {
-            var task = await this.taskService.AddTaskAsync(todoListId, model);
-            return this.CreatedAtAction(nameof(this.GetTaskById), new { id = task.Id }, task);
+            var task = await taskService.AddTaskAsync(todoListId, model, userId);
+            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
         }
-        catch (KeyNotFoundException)
+        catch (UnauthorizedAccessException ex)
         {
-            return this.NotFound();
+            return Forbid(ex.Message);
         }
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TaskWebApiModel>> EditTask(int id, [FromBody] TaskEditModel model)
+    public async Task<ActionResult<TaskWebApiModel>> EditTask(int id, [FromBody] TaskEditDto model)
     {
-        if (!this.ModelState.IsValid)
-        {
-            return this.BadRequest(this.ModelState);
-        }
+        var userId = GetUserId();
 
-        var updated = await this.taskService.UpdateTaskAsync(id, model);
-        if (updated == null)
+        try
         {
-            return this.NotFound();
+            var updated = await taskService.UpdateTaskAsync(id, model, userId);
+            return updated == null ? NotFound() : Ok(updated);
         }
-
-        return this.Ok(updated);
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
-        var deleted = await this.taskService.DeleteTaskAsync(id);
-        if (!deleted)
-        {
-            return this.NotFound();
-        }
+        var userId = GetUserId();
 
-        return this.NoContent();
+        try
+        {
+            var deleted = await taskService.DeleteTaskAsync(id, userId);
+            return deleted ? NoContent() : NotFound();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 }

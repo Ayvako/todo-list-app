@@ -14,55 +14,79 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    public IActionResult Register() => this.View();
-
-    [HttpPost]
-    public async Task<IActionResult> Register(UserRegisterModel model)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return this.View(model);
-        }
-
-        var result = await this.userService.RegisterAsync(model);
-        if (result == null)
-        {
-            this.ModelState.AddModelError(string.Empty, "Registration failed.");
-            return this.View(model);
-        }
-
-        return this.RedirectToAction("Login");
-    }
-
-    [HttpGet]
-    public IActionResult Login() => this.View();
+    public IActionResult Login() => View();
 
     [HttpPost]
     public async Task<IActionResult> Login(UserLoginModel model)
     {
-        if (!this.ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            return this.View(model);
+            return View(model);
         }
 
-        var user = await this.userService.LoginAsync(model);
-        if (user == null)
+        var response = await userService.LoginAsync(model);
+        if (response == null)
         {
-            this.ModelState.AddModelError(string.Empty, "Invalid email or password.");
-            return this.View(model);
+            ModelState.AddModelError("", "Invalid credentials");
+            return View(model);
         }
 
-        this.HttpContext.Session.SetInt32("UserId", user.Id);
-        this.HttpContext.Session.SetString("UserName", user.UserName);
-        this.HttpContext.Session.SetString("UserRole", user.Role.ToString());
+        Response.Cookies.Append("jwt", response.Token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddHours(1)
+        });
 
-        return this.RedirectToAction("Index", "TodoList");
+        HttpContext.Session.SetInt32("UserId", response.User.Id);
+        HttpContext.Session.SetString("UserName", response.User.UserName);
+        HttpContext.Session.SetString("UserRole", response.User.Role);
+
+        return RedirectToAction("Index", "TodoList");
     }
 
     [HttpGet]
+    public IActionResult Register() => View();
+
+    [HttpPost]
+    public async Task<IActionResult> Register(UserRegisterModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        try
+        {
+            var response = await userService.RegisterAsync(model);
+
+            Response.Cookies.Append("jwt", response.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
+            });
+
+            HttpContext.Session.SetInt32("UserId", response.User.Id);
+            HttpContext.Session.SetString("UserName", response.User.UserName);
+            HttpContext.Session.SetString("UserRole", response.User.Role);
+
+            return RedirectToAction("Index", "TodoList");
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", ex.Message);
+            return View(model);
+        }
+    }
+
+    [HttpPost]
     public IActionResult Logout()
     {
-        this.HttpContext.Session.Clear();
-        return this.RedirectToAction("Login");
+        HttpContext.Session.Clear();
+        Response.Cookies.Delete("jwt");
+        return RedirectToAction("Login");
     }
 }

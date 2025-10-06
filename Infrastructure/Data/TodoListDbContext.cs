@@ -35,7 +35,7 @@ public class TodoListDbContext : DbContext
 
         _ = modelBuilder.Entity<TodoListAccessEntity>()
             .HasOne(a => a.TodoList)
-            .WithMany()
+            .WithMany(l => l.AccessList)
             .HasForeignKey(a => a.TodoListId)
             .OnDelete(DeleteBehavior.Cascade);
     }

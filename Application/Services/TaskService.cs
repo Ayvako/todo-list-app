@@ -1,75 +1,105 @@
 using Core.Entities.Task;
 using Core.Interfaces;
-using WebApp.Models.Tasks;
+using Contracts.Tasks;
+using Application.Services.Interfaces;
 
 namespace Application.Services;
 
 public class TaskService : ITaskService
 {
     private readonly ITaskRepository repository;
+    private readonly ITodoListService todoListService;
 
-    public TaskService(ITaskRepository repository)
+    public TaskService(ITaskRepository repository, ITodoListService todoListService)
     {
         this.repository = repository;
+        this.todoListService = todoListService;
     }
 
-    public async Task<TaskWebApiModel> AddTaskAsync(int todoListId, TaskCreateModel model)
+    public async Task<TaskDto> AddTaskAsync(int todoListId, TaskCreateDto dto, int userId)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(dto);
+
+        var canEdit = await todoListService.CanEditAsync(todoListId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to add tasks to this list.");
+        }
 
         var entity = new TaskEntity
         {
-            Title = model.Title,
-            Description = model.Description,
-            DueDate = model.DueDate,
-            Assignee = model.Assignee,
+            Title = dto.Title,
+            Description = dto.Description,
+            DueDate = dto.DueDate,
+            Assignee = dto.Assignee,
+            TodoListId = todoListId
         };
 
-        var added = await this.repository.AddTaskAsync(todoListId, entity);
-
-        return MapToWebApiModel(added);
+        var added = await repository.AddTaskAsync(todoListId, entity);
+        return MapToDto(added);
     }
 
-    public async Task<TaskWebApiModel?> GetTaskByIdAsync(int id)
+    public async Task<TaskDto?> GetTaskByIdAsync(int id)
     {
-        var entity = await this.repository.GetTaskByIdAsync(id);
-        return entity == null ? null : MapToWebApiModel(entity);
+        var entity = await repository.GetTaskByIdAsync(id);
+        return entity == null ? null : MapToDto(entity);
     }
 
-    public async Task<TaskWebApiModel?> UpdateTaskAsync(int id, TaskEditModel model)
+    public async Task<TaskDto?> UpdateTaskAsync(int id, TaskEditDto dto, int userId)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(dto);
 
-        var entity = new TaskEntity
+        var existing = await repository.GetTaskByIdAsync(id);
+        if (existing == null)
         {
-            Id = model.Id,
-            Title = model.Title,
-            Description = model.Description,
-            DueDate = model.DueDate,
-            Assignee = model.Assignee,
-            Status = model.Status
-        };
+            return null;
+        }
 
-        var updated = await this.repository.UpdateTaskAsync(id, entity);
-        return updated == null ? null : MapToWebApiModel(updated);
+        var canEdit = await todoListService.CanEditAsync(existing.TodoListId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to edit this task.");
+        }
+
+        existing.Title = dto.Title;
+        existing.Description = dto.Description;
+        existing.DueDate = dto.DueDate;
+        existing.Assignee = dto.Assignee;
+        existing.Status = dto.Status;
+
+        var updated = await repository.UpdateTaskAsync(id, existing);
+        return updated == null ? null : MapToDto(updated);
     }
 
-    public async Task<bool> DeleteTaskAsync(int id)
+    public async Task<bool> DeleteTaskAsync(int id, int userId)
     {
-        return await this.repository.DeleteTaskAsync(id);
+        var existing = await repository.GetTaskByIdAsync(id);
+        if (existing == null)
+        {
+            return false;
+        }
+
+        var canEdit = await todoListService.CanEditAsync(existing.TodoListId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to delete this task.");
+        }
+
+        return await repository.DeleteTaskAsync(id);
     }
 
-    private static TaskWebApiModel MapToWebApiModel(TaskEntity entity)
+    private static TaskDto MapToDto(TaskEntity entity)
     {
-        return new TaskWebApiModel
+        return new TaskDto
         {
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            DueDate = entity.DueDate,
             CreatedAt = entity.CreatedAt,
+            DueDate = entity.DueDate,
+            Status = entity.Status,
             Assignee = entity.Assignee,
-            Status = entity.Status
+            TodoListId = entity.TodoListId
         };
     }
 }

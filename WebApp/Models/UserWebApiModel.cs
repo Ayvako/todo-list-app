@@ -1,5 +1,3 @@
-using Core.Enums;
-
 namespace WebApp.Models;
 
 public class UserWebApiModel
@@ -10,5 +8,7 @@ public class UserWebApiModel
 
     public string Email { get; set; } = string.Empty;
 
-    public UserRole Role { get; set; } = UserRole.Unauthorized;
+    public string Role { get; set; }
+
+    public string Token { get; set; } = string.Empty;
 }

@@ -10,5 +10,5 @@ public class TodoListDto
 
     public string Description { get; set; } = string.Empty;
 
-    public List<TaskDto> Tasks { get; set; } = new List<TaskDto>();
+    public List<TaskDto> Tasks { get; set; } = new();
 }

@@ -20,4 +20,6 @@ public class TodoListEntity
 
     [NotMapped]
     public List<int>? ViewerIds { get; set; } = new List<int>();
+
+    public List<TodoListAccessEntity> AccessList { get; set; } = new();
 }

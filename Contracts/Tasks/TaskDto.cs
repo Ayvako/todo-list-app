@@ -18,7 +18,9 @@ public class TaskDto
 
     public string Assignee { get; set; } = string.Empty;
 
-    public List<TaskTagDto> Tags { get; set; } = new List<TaskTagDto>();
+    public int TodoListId { get; set; }
 
-    public List<TaskCommentDto> Comments { get; set; } = new List<TaskCommentDto>();
+    public List<TaskTagDto> Tags { get; set; } = new();
+
+    public List<TaskCommentDto> Comments { get; set; } = new();
 }

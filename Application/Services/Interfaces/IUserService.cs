@@ -1,6 +1,6 @@
 using Contracts.Users;
 
-namespace Application.Services;
+namespace Application.Services.Interfaces;
 
 public interface IUserService
 {
