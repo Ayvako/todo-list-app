@@ -9,5 +9,8 @@
         <NoWarn>$(NoWarn);CA1002</NoWarn>
         <NoWarn>$(NoWarn);CA2234</NoWarn>
         <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
+        <NoWarn>$(NoWarn);SA1009</NoWarn>
+        <NoWarn>$(NoWarn);SA1000</NoWarn>
+        <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     </PropertyGroup>
 </Project>

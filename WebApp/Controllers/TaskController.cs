@@ -13,6 +13,7 @@ public class TaskController : Controller
         this.taskService = taskService;
     }
 
+    [HttpGet]
     public IActionResult Add(int todoListId)
     {
         if (!this.ModelState.IsValid)
@@ -66,6 +67,7 @@ public class TaskController : Controller
         return this.RedirectToAction("Index", "TodoList");
     }
 
+    [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
         if (!this.ModelState.IsValid)

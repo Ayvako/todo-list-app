@@ -14,79 +14,89 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login() => View();
+    public IActionResult Login() => this.View();
 
     [HttpPost]
+    [ValidateAntiForgeryToken] // ✅ Добавлено: защита от CSRF
     public async Task<IActionResult> Login(UserLoginModel model)
     {
-        if (!ModelState.IsValid)
+        if (!this.ModelState.IsValid)
         {
-            return View(model);
+            return this.View(model);
         }
 
-        var response = await userService.LoginAsync(model);
+        var response = await this.userService.LoginAsync(model);
         if (response == null)
         {
-            ModelState.AddModelError("", "Invalid credentials");
-            return View(model);
+            this.ModelState.AddModelError(string.Empty, "Invalid credentials");
+            return this.View(model);
         }
 
-        Response.Cookies.Append("jwt", response.Token, new CookieOptions
+        this.Response.Cookies.Append("jwt", response.Token, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddHours(1)
+            Expires = DateTimeOffset.UtcNow.AddHours(1),
         });
 
-        HttpContext.Session.SetInt32("UserId", response.User.Id);
-        HttpContext.Session.SetString("UserName", response.User.UserName);
-        HttpContext.Session.SetString("UserRole", response.User.Role);
+        this.HttpContext.Session.SetInt32("UserId", response.User.Id);
+        this.HttpContext.Session.SetString("UserName", response.User.UserName);
+        this.HttpContext.Session.SetString("UserRole", response.User.Role);
 
-        return RedirectToAction("Index", "TodoList");
+        return this.RedirectToAction("Index", "TodoList");
     }
 
     [HttpGet]
-    public IActionResult Register() => View();
+    public IActionResult Register() => this.View();
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(UserRegisterModel model)
     {
-        if (!ModelState.IsValid)
+        if (!this.ModelState.IsValid)
         {
-            return View(model);
+            return this.View(model);
         }
 
         try
         {
-            var response = await userService.RegisterAsync(model);
+            var response = await this.userService.RegisterAsync(model);
 
-            Response.Cookies.Append("jwt", response.Token, new CookieOptions
+            ArgumentNullException.ThrowIfNull(response);
+
+            this.Response.Cookies.Append("jwt", response.Token, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddHours(1)
+                Expires = DateTimeOffset.UtcNow.AddHours(1),
             });
 
-            HttpContext.Session.SetInt32("UserId", response.User.Id);
-            HttpContext.Session.SetString("UserName", response.User.UserName);
-            HttpContext.Session.SetString("UserRole", response.User.Role);
+            this.HttpContext.Session.SetInt32("UserId", response.User.Id);
+            this.HttpContext.Session.SetString("UserName", response.User.UserName);
+            this.HttpContext.Session.SetString("UserRole", response.User.Role);
 
-            return RedirectToAction("Index", "TodoList");
+            return this.RedirectToAction("Index", "TodoList");
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            ModelState.AddModelError("", ex.Message);
-            return View(model);
+            this.ModelState.AddModelError(string.Empty, ex.Message);
+            return this.View(model);
+        }
+        catch (InvalidOperationException ex)
+        {
+            this.ModelState.AddModelError(string.Empty, ex.Message);
+            return this.View(model);
         }
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Logout()
     {
-        HttpContext.Session.Clear();
-        Response.Cookies.Delete("jwt");
-        return RedirectToAction("Login");
+        this.HttpContext.Session.Clear();
+        this.Response.Cookies.Delete("jwt");
+        return this.RedirectToAction("Login");
     }
 }

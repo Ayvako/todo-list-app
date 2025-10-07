@@ -18,24 +18,26 @@ public class TodoListService : ITodoListService
 
     public async Task<IEnumerable<TodoListWebApiModel>> GetAllAsync(int currentUserId)
     {
-        var entities = await repository.GetAllAsync();
+        var entities = await this.repository.GetAllAsync();
         return entities.Select(e => MapToWebApiModel(e, currentUserId)).ToList();
     }
 
     public async Task<TodoListWebApiModel?> GetByIdAsync(int id, int currentUserId)
     {
-        var entity = await repository.GetByIdAsync(id);
+        var entity = await this.repository.GetByIdAsync(id);
         return entity == null ? null : MapToWebApiModel(entity, currentUserId);
     }
 
     public async Task<IEnumerable<TaskWebApiModel>> GetTasksByListIdAsync(int id)
     {
-        var tasks = await repository.GetTasksByListIdAsync(id);
+        var tasks = await this.repository.GetTasksByListIdAsync(id);
         return tasks.Select(MapTaskToWebApiModel).ToList();
     }
 
     public async Task<TodoListWebApiModel> AddAsync(TodoListCreateDto model, int userId)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         var entity = new TodoListEntity
         {
             Title = model.Title,
@@ -45,13 +47,15 @@ public class TodoListService : ITodoListService
             ViewerIds = new List<int>()
         };
 
-        var added = await repository.AddAsync(entity);
+        var added = await this.repository.AddAsync(entity);
         return MapToWebApiModel(added, userId);
     }
 
     public async Task<TodoListWebApiModel?> UpdateAsync(int id, TodoListUpdateDto model, int userId)
     {
-        var canEdit = await CanEditAsync(id, userId);
+        ArgumentNullException.ThrowIfNull(model);
+
+        var canEdit = await this.CanEditAsync(id, userId);
         if (!canEdit)
         {
             throw new UnauthorizedAccessException("You don't have permission to edit this list.");
@@ -63,33 +67,33 @@ public class TodoListService : ITodoListService
             Description = model.Description
         };
 
-        var updated = await repository.UpdateAsync(id, entity);
+        var updated = await this.repository.UpdateAsync(id, entity);
         return updated == null ? null : MapToWebApiModel(updated, userId);
     }
 
     public async Task<bool> DeleteAsync(int id, int userId)
     {
-        var canEdit = await CanEditAsync(id, userId);
+        var canEdit = await this.CanEditAsync(id, userId);
         return !canEdit
             ? throw new UnauthorizedAccessException("You don't have permission to delete this list.")
-            : await repository.DeleteAsync(id);
+            : await this.repository.DeleteAsync(id);
     }
 
     public async Task<bool> CanEditAsync(int todoListId, int userId)
     {
-        var list = await repository.GetByIdAsync(todoListId);
+        var list = await this.repository.GetByIdAsync(todoListId);
         return list != null && (list.OwnerId == userId || (list.EditorIds?.Contains(userId) ?? false));
     }
 
     public async Task<bool> CanViewAsync(int todoListId, int userId)
     {
-        var list = await repository.GetByIdAsync(todoListId);
+        var list = await this.repository.GetByIdAsync(todoListId);
         return list != null && (list.OwnerId == userId
             || (list.EditorIds?.Contains(userId) ?? false)
             || (list.ViewerIds?.Contains(userId) ?? false));
     }
 
-    private TodoListWebApiModel MapToWebApiModel(TodoListEntity entity, int userId)
+    private static TodoListWebApiModel MapToWebApiModel(TodoListEntity entity, int userId)
     {
         return new TodoListWebApiModel
         {

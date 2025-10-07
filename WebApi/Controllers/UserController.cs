@@ -20,47 +20,52 @@ public class UserController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<UserLoginResponseDto>> Register([FromBody] UserRegisterDto model)
     {
-        if (!ModelState.IsValid)
+        if (!this.ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.BadRequest(this.ModelState);
         }
+
+        ArgumentNullException.ThrowIfNull(model);
 
         try
         {
-            var user = await userService.RegisterAsync(model.UserName, model.Email, model.Password);
+            var user = await this.userService.RegisterAsync(model.UserName, model.Email, model.Password);
+            ArgumentNullException.ThrowIfNull(user);
 
-            var token = jwtService.GenerateToken(user);
+            var token = this.jwtService.GenerateToken(user);
 
             return this.Ok(new { user, token });
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return this.Conflict(new { message = ex.Message });
         }
     }
 
     [HttpPost("login")]
     public async Task<ActionResult<UserLoginResponseDto>> Login([FromBody] UserLoginDto model)
     {
-        if (!ModelState.IsValid)
+        if (!this.ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return this.BadRequest(this.ModelState);
         }
 
-        var user = await userService.LoginAsync(model.Email, model.Password);
+        ArgumentNullException.ThrowIfNull(model);
+
+        var user = await this.userService.LoginAsync(model.Email, model.Password);
         if (user == null)
         {
-            return Unauthorized();
+            return this.Unauthorized();
         }
 
-        var token = jwtService.GenerateToken(user);
+        var token = this.jwtService.GenerateToken(user);
 
         var response = new UserLoginResponseDto
         {
             Token = token,
-            User = user
+            User = user,
         };
 
-        return Ok(response);
+        return this.Ok(response);
     }
 }

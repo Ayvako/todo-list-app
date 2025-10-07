@@ -20,20 +20,20 @@ public class UserService : IUserService
 
     public async Task<UserDto?> GetByIdAsync(int id)
     {
-        var user = await dbContext.Users.FindAsync(id);
+        var user = await this.dbContext.Users.FindAsync(id);
         return user == null ? null : MapToDto(user);
     }
 
     public async Task<IEnumerable<UserDto>> GetAllAsync()
     {
-        return await dbContext.Users
+        return await this.dbContext.Users
             .Select(u => MapToDto(u))
             .ToListAsync();
     }
 
-    public async Task<UserDto> RegisterAsync(string username, string email, string password)
+    public async Task<UserDto?> RegisterAsync(string username, string email, string password)
     {
-        if (await dbContext.Users.AnyAsync(u => u.Email == email))
+        if (await this.dbContext.Users.AnyAsync(u => u.Email == email))
         {
             throw new InvalidOperationException("User with this email already exists.");
         }
@@ -46,8 +46,8 @@ public class UserService : IUserService
             Role = UserRole.Authorized
         };
 
-        dbContext.Users.Add(entity);
-        await dbContext.SaveChangesAsync();
+        _ = this.dbContext.Users.Add(entity);
+        _ = await this.dbContext.SaveChangesAsync();
 
         return MapToDto(entity);
     }
@@ -56,7 +56,7 @@ public class UserService : IUserService
     {
         var hash = HashPassword(password);
 
-        var user = await dbContext.Users
+        var user = await this.dbContext.Users
             .FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == hash);
 
         return user == null ? null : MapToDto(user);
@@ -64,7 +64,7 @@ public class UserService : IUserService
 
     public async Task<bool> HasAccessToListAsync(int userId, int listId, bool requireEditRights = false)
     {
-        var access = await dbContext.TodoListAccesses
+        var access = await this.dbContext.TodoListAccesses
             .FirstOrDefaultAsync(a => a.UserId == userId && a.TodoListId == listId);
 
         if (access == null)
@@ -90,9 +90,8 @@ public class UserService : IUserService
 
     private static string HashPassword(string password)
     {
-        using var sha256 = SHA256.Create();
         var bytes = Encoding.UTF8.GetBytes(password);
-        var hash = sha256.ComputeHash(bytes);
+        var hash = SHA256.HashData(bytes);
         return Convert.ToBase64String(hash);
     }
 }

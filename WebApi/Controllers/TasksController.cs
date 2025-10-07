@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using Application.Services.Interfaces;
 using Contracts.Tasks;
@@ -19,61 +20,61 @@ public class TasksController : ControllerBase
         this.taskService = taskService;
     }
 
-    private int GetUserId() =>
-        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskWebApiModel>> GetTaskById(int id)
     {
-        var task = await taskService.GetTaskByIdAsync(id);
-        return task == null ? NotFound() : Ok(task);
+        var task = await this.taskService.GetTaskByIdAsync(id);
+        return task == null ? this.NotFound() : this.Ok(task);
     }
 
     [HttpPost("{todoListId}/tasks")]
     public async Task<ActionResult<TaskWebApiModel>> AddTask(int todoListId, [FromBody] TaskCreateDto model)
     {
-        var userId = GetUserId();
+        var userId = this.GetUserId();
 
         try
         {
-            var task = await taskService.AddTaskAsync(todoListId, model, userId);
-            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+            var task = await this.taskService.AddTaskAsync(todoListId, model, userId);
+            return this.CreatedAtAction(nameof(this.GetTaskById), new { id = task.Id }, task);
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Forbid(ex.Message);
+            return this.Forbid(ex.Message);
         }
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult<TaskWebApiModel>> EditTask(int id, [FromBody] TaskEditDto model)
     {
-        var userId = GetUserId();
+        var userId = this.GetUserId();
 
         try
         {
-            var updated = await taskService.UpdateTaskAsync(id, model, userId);
-            return updated == null ? NotFound() : Ok(updated);
+            var updated = await this.taskService.UpdateTaskAsync(id, model, userId);
+            return updated == null ? this.NotFound() : this.Ok(updated);
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Forbid(ex.Message);
+            return this.Forbid(ex.Message);
         }
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
-        var userId = GetUserId();
+        var userId = this.GetUserId();
 
         try
         {
-            var deleted = await taskService.DeleteTaskAsync(id, userId);
-            return deleted ? NoContent() : NotFound();
+            var deleted = await this.taskService.DeleteTaskAsync(id, userId);
+            return deleted ? this.NoContent() : this.NotFound();
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Forbid(ex.Message);
+            return this.Forbid(ex.Message);
         }
     }
+
+    private int GetUserId() =>
+                int.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier)!, CultureInfo.InvariantCulture);
 }

@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using WebApp.Models;
 
 namespace WebApp.Services;
@@ -14,11 +13,12 @@ public class UserWebApiService : IUserWebApiService
 
     public async Task<UserLoginResponseModel?> LoginAsync(UserLoginModel model)
     {
-        var response = await httpClient.PostAsJsonAsync("api/User/login", model);
+        var response = await this.httpClient.PostAsJsonAsync("api/User/login", model);
 
         if (!response.IsSuccessStatusCode)
         {
-            return null;
+            var error = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(error);
         }
 
         var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>();
@@ -27,12 +27,12 @@ public class UserWebApiService : IUserWebApiService
 
     public async Task<UserLoginResponseModel?> RegisterAsync(UserRegisterModel model)
     {
-        var response = await httpClient.PostAsJsonAsync("api/User/register", model);
+        var response = await this.httpClient.PostAsJsonAsync("api/User/register", model);
 
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            throw new Exception(error);
+            throw new HttpRequestException(error);
         }
 
         var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>();
