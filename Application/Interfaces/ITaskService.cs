@@ -1,6 +1,6 @@
 using Contracts.Tasks;
 
-namespace Application.Services.Interfaces;
+namespace Application.Interfaces;
 
 public interface ITaskService
 {

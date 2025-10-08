@@ -1,4 +1,4 @@
-using Application.Services.Interfaces;
+using Application.Interfaces;
 using Contracts.Users;
 using Core.Entities.TodoUser;
 using Core.Enums;
@@ -80,7 +80,7 @@ public class UserService : IUserService
         return true;
     }
 
-    private static UserDto MapToDto(UserEntity entity) => new UserDto
+    private static UserDto MapToDto(UserEntity entity) => new()
     {
         Id = entity.Id,
         UserName = entity.UserName,

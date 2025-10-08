@@ -1,7 +1,7 @@
 using Core.Entities.Task;
 using Core.Interfaces;
 using Contracts.Tasks;
-using Application.Services.Interfaces;
+using Application.Interfaces;
 
 namespace Application.Services;
 
@@ -20,7 +20,7 @@ public class TaskService : ITaskService
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var canEdit = await todoListService.CanEditAsync(todoListId, userId);
+        var canEdit = await this.todoListService.CanEditAsync(todoListId, userId);
         if (!canEdit)
         {
             throw new UnauthorizedAccessException("You don't have permission to add tasks to this list.");
@@ -35,13 +35,13 @@ public class TaskService : ITaskService
             TodoListId = todoListId
         };
 
-        var added = await repository.AddTaskAsync(todoListId, entity);
+        var added = await this.repository.AddTaskAsync(todoListId, entity);
         return MapToDto(added);
     }
 
     public async Task<TaskDto?> GetTaskByIdAsync(int id)
     {
-        var entity = await repository.GetTaskByIdAsync(id);
+        var entity = await this.repository.GetTaskByIdAsync(id);
         return entity == null ? null : MapToDto(entity);
     }
 
@@ -49,13 +49,13 @@ public class TaskService : ITaskService
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var existing = await repository.GetTaskByIdAsync(id);
+        var existing = await this.repository.GetTaskByIdAsync(id);
         if (existing == null)
         {
             return null;
         }
 
-        var canEdit = await todoListService.CanEditAsync(existing.TodoListId, userId);
+        var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
         if (!canEdit)
         {
             throw new UnauthorizedAccessException("You don't have permission to edit this task.");
@@ -67,25 +67,25 @@ public class TaskService : ITaskService
         existing.Assignee = dto.Assignee;
         existing.Status = dto.Status;
 
-        var updated = await repository.UpdateTaskAsync(id, existing);
+        var updated = await this.repository.UpdateTaskAsync(id, existing);
         return updated == null ? null : MapToDto(updated);
     }
 
     public async Task<bool> DeleteTaskAsync(int id, int userId)
     {
-        var existing = await repository.GetTaskByIdAsync(id);
+        var existing = await this.repository.GetTaskByIdAsync(id);
         if (existing == null)
         {
             return false;
         }
 
-        var canEdit = await todoListService.CanEditAsync(existing.TodoListId, userId);
+        var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
         if (!canEdit)
         {
             throw new UnauthorizedAccessException("You don't have permission to delete this task.");
         }
 
-        return await repository.DeleteTaskAsync(id);
+        return await this.repository.DeleteTaskAsync(id);
     }
 
     private static TaskDto MapToDto(TaskEntity entity)

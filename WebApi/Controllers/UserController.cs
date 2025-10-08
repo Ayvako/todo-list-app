@@ -1,4 +1,4 @@
-using Application.Services.Interfaces;
+using Application.Interfaces;
 using Contracts.Users;
 using Microsoft.AspNetCore.Mvc;
 

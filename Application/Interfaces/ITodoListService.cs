@@ -2,7 +2,7 @@ using WebApp.Models.Tasks;
 using WebApp.Models.TodoLists;
 using Contracts.TodoLists;
 
-namespace Application.Services.Interfaces;
+namespace Application.Interfaces;
 
 public interface ITodoListService
 {

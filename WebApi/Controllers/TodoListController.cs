@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
-using Application.Services.Interfaces;
+using Application.Interfaces;
 using Contracts.TodoLists;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

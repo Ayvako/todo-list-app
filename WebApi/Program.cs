@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Application.Interfaces;
 using Application.Services;
-using Application.Services.Interfaces;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Repositories;

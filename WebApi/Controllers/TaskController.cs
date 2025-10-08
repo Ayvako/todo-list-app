@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
-using Application.Services.Interfaces;
+using Application.Interfaces;
 using Contracts.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +11,11 @@ namespace WebApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class TasksController : ControllerBase
+public class TaskController : ControllerBase
 {
     private readonly ITaskService taskService;
 
-    public TasksController(ITaskService taskService)
+    public TaskController(ITaskService taskService)
     {
         this.taskService = taskService;
     }

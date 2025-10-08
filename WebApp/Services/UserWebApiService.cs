@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WebApp.Models;
+using WebApp.Models.Users;
 
 namespace WebApp.Services;
 
@@ -34,7 +35,7 @@ public class UserWebApiService : IUserWebApiService
             throw new Exception($"Ошибка при входе: {response.StatusCode}");
         }
 
-        var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>(jsonOptions);
+        var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>(this.jsonOptions);
         return result;
     }
 
@@ -53,7 +54,7 @@ public class UserWebApiService : IUserWebApiService
             throw new Exception($"Register error: {response.StatusCode}");
         }
 
-        var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>(jsonOptions);
+        var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>(this.jsonOptions);
         return result;
     }
 }
