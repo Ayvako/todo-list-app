@@ -23,7 +23,7 @@ public class TaskEntity
 
     public TodoListEntity TodoList { get; set; } = null!;
 
-    public List<TaskTagEntity> Tags { get; } = new List<TaskTagEntity>();
+    public ICollection<TaskTagEntity> Tags { get; set; } = new HashSet<TaskTagEntity>();
 
-    public List<TaskCommentEntity> Comments { get; } = new List<TaskCommentEntity>();
+    public ICollection<TaskCommentEntity> Comments { get; set; } = new HashSet<TaskCommentEntity>();
 }

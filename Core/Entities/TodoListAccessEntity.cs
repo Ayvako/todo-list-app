@@ -7,16 +7,14 @@ namespace Core.Entities;
 
 public class TodoListAccessEntity
 {
-    public int Id { get; set; }
-
-    [ForeignKey("UserEntity")]
     public int UserId { get; set; }
 
+    [ForeignKey("UserId")]
     public UserEntity User { get; set; } = null!;
 
-    [ForeignKey("TodoListEntity")]
     public int TodoListId { get; set; }
 
+    [ForeignKey("TodoListId")]
     public TodoListEntity TodoList { get; set; } = null!;
 
     public TodoListAccessRole Role { get; set; }

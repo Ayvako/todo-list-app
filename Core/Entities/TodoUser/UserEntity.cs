@@ -15,13 +15,19 @@ public class UserEntity
 
     [Required]
     [MaxLength(100)]
+    [EmailAddress]
     public string Email { get; set; } = string.Empty;
 
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
 
-    public UserRole Role { get; set; } = UserRole.Authorized;
+    public UserRole Role { get; set; } = UserRole.Unauthorized;
 
-    public ICollection<TodoListEntity> OwnedLists { get; set; } = new List<TodoListEntity>();
-    public ICollection<TaskEntity> AssignedTasks { get; set; } = new List<TaskEntity>();
+    public ICollection<TaskCommentEntity> Comments { get; set; } = new HashSet<TaskCommentEntity>();
+
+    public ICollection<TodoListEntity> OwnedLists { get; set; } = new HashSet<TodoListEntity>();
+
+    public ICollection<TaskEntity> AssignedTasks { get; set; } = new HashSet<TaskEntity>();
+
+    public ICollection<TodoListAccessEntity> AccessList { get; set; } = new HashSet<TodoListAccessEntity>();
 }

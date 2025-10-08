@@ -135,40 +135,30 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("UserEntityId")
-                        .HasColumnType("int");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserEntityId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("TodoLists");
                 });
 
             modelBuilder.Entity("Core.Entities.TodoListAccessEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccessLevel")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.Property<int>("TodoListId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("Role")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId", "TodoListId");
 
                     b.HasIndex("TodoListId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("TodoListAccesses");
                 });
@@ -208,13 +198,13 @@ namespace Infrastructure.Migrations
                     b.HasOne("Core.Entities.Task.TaskEntity", "Task")
                         .WithMany("Comments")
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Core.Entities.TodoUser.UserEntity", "User")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Task");
@@ -250,23 +240,27 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Core.Entities.TodoList.TodoListEntity", b =>
                 {
-                    b.HasOne("Core.Entities.TodoUser.UserEntity", null)
+                    b.HasOne("Core.Entities.TodoUser.UserEntity", "Owner")
                         .WithMany("OwnedLists")
-                        .HasForeignKey("UserEntityId");
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Core.Entities.TodoListAccessEntity", b =>
                 {
                     b.HasOne("Core.Entities.TodoList.TodoListEntity", "TodoList")
-                        .WithMany()
+                        .WithMany("AccessList")
                         .HasForeignKey("TodoListId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Core.Entities.TodoUser.UserEntity", "User")
-                        .WithMany()
+                        .WithMany("AccessList")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("TodoList");
@@ -283,12 +277,18 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Core.Entities.TodoList.TodoListEntity", b =>
                 {
+                    b.Navigation("AccessList");
+
                     b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("Core.Entities.TodoUser.UserEntity", b =>
                 {
+                    b.Navigation("AccessList");
+
                     b.Navigation("AssignedTasks");
+
+                    b.Navigation("Comments");
 
                     b.Navigation("OwnedLists");
                 });

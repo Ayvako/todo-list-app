@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using WebApp.Services;
 
@@ -9,7 +10,11 @@ internal static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        _ = builder.Services.AddControllersWithViews();
+        _ = builder.Services.AddControllersWithViews()
+             .AddJsonOptions(options =>
+             {
+                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+             });
 
         var baseUrl = builder.Configuration["WebApi:BaseUrl"];
 

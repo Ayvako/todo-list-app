@@ -17,7 +17,7 @@ public class UserController : Controller
     public IActionResult Login() => this.View();
 
     [HttpPost]
-    [ValidateAntiForgeryToken] // ✅ Добавлено: защита от CSRF
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(UserLoginModel model)
     {
         if (!this.ModelState.IsValid)
@@ -40,6 +40,7 @@ public class UserController : Controller
             Expires = DateTimeOffset.UtcNow.AddHours(1),
         });
 
+        this.HttpContext.Session.SetString("AuthToken", response.Token);
         this.HttpContext.Session.SetInt32("UserId", response.User.Id);
         this.HttpContext.Session.SetString("UserName", response.User.UserName);
         this.HttpContext.Session.SetString("UserRole", response.User.Role);
@@ -59,36 +60,28 @@ public class UserController : Controller
             return this.View(model);
         }
 
-        try
+        var response = await this.userService.RegisterAsync(model);
+
+        if (response == null)
         {
-            var response = await this.userService.RegisterAsync(model);
-
-            ArgumentNullException.ThrowIfNull(response);
-
-            this.Response.Cookies.Append("jwt", response.Token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddHours(1),
-            });
-
-            this.HttpContext.Session.SetInt32("UserId", response.User.Id);
-            this.HttpContext.Session.SetString("UserName", response.User.UserName);
-            this.HttpContext.Session.SetString("UserRole", response.User.Role);
-
-            return this.RedirectToAction("Index", "TodoList");
-        }
-        catch (ArgumentException ex)
-        {
-            this.ModelState.AddModelError(string.Empty, ex.Message);
+            this.ModelState.AddModelError(string.Empty, "Registration error. Check your details or use a different email.");
             return this.View(model);
         }
-        catch (InvalidOperationException ex)
+
+        this.Response.Cookies.Append("jwt", response.Token, new CookieOptions
         {
-            this.ModelState.AddModelError(string.Empty, ex.Message);
-            return this.View(model);
-        }
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddHours(1),
+        });
+
+        this.HttpContext.Session.SetInt32("UserId", response.User.Id);
+        this.HttpContext.Session.SetString("UserName", response.User.UserName);
+        this.HttpContext.Session.SetString("UserRole", response.User.Role);
+        this.HttpContext.Session.SetString("AuthToken", response.Token);
+
+        return this.RedirectToAction("Index", "TodoList");
     }
 
     [HttpPost]

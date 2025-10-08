@@ -1,3 +1,4 @@
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -5,14 +6,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddOwnerAndAccessToTodoList : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            ArgumentNullException.ThrowIfNull(migrationBuilder);
-
-            _ = migrationBuilder.CreateTable(
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -25,31 +24,31 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    _ = table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Id);
                 });
 
-            _ = migrationBuilder.CreateTable(
+            migrationBuilder.CreateTable(
                 name: "TodoLists",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OwnerId = table.Column<int>(type: "int", nullable: false),
-                    UserEntityId = table.Column<int>(type: "int", nullable: true)
+                    OwnerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    _ = table.PrimaryKey("PK_TodoLists", x => x.Id);
-                    _ = table.ForeignKey(
-                        name: "FK_TodoLists_Users_UserEntityId",
-                        column: x => x.UserEntityId,
+                    table.PrimaryKey("PK_TodoLists", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TodoLists_Users_OwnerId",
+                        column: x => x.OwnerId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
-            _ = migrationBuilder.CreateTable(
+            migrationBuilder.CreateTable(
                 name: "Tasks",
                 columns: table => new
                 {
@@ -66,48 +65,46 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    _ = table.PrimaryKey("PK_Tasks", x => x.Id);
-                    _ = table.ForeignKey(
+                    table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.ForeignKey(
                         name: "FK_Tasks_TodoLists_TodoListId",
                         column: x => x.TodoListId,
                         principalTable: "TodoLists",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    _ = table.ForeignKey(
+                    table.ForeignKey(
                         name: "FK_Tasks_Users_UserEntityId",
                         column: x => x.UserEntityId,
                         principalTable: "Users",
                         principalColumn: "Id");
                 });
 
-            _ = migrationBuilder.CreateTable(
+            migrationBuilder.CreateTable(
                 name: "TodoListAccesses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     TodoListId = table.Column<int>(type: "int", nullable: false),
-                    AccessLevel = table.Column<int>(type: "int", nullable: false)
+                    Role = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    _ = table.PrimaryKey("PK_TodoListAccesses", x => x.Id);
-                    _ = table.ForeignKey(
+                    table.PrimaryKey("PK_TodoListAccesses", x => new { x.UserId, x.TodoListId });
+                    table.ForeignKey(
                         name: "FK_TodoListAccesses_TodoLists_TodoListId",
                         column: x => x.TodoListId,
                         principalTable: "TodoLists",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    _ = table.ForeignKey(
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_TodoListAccesses_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
-            _ = migrationBuilder.CreateTable(
+            migrationBuilder.CreateTable(
                 name: "Comments",
                 columns: table => new
                 {
@@ -120,22 +117,22 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    _ = table.PrimaryKey("PK_Comments", x => x.Id);
-                    _ = table.ForeignKey(
+                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.ForeignKey(
                         name: "FK_Comments_Tasks_TaskId",
                         column: x => x.TaskId,
                         principalTable: "Tasks",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    _ = table.ForeignKey(
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_Comments_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
-            _ = migrationBuilder.CreateTable(
+            migrationBuilder.CreateTable(
                 name: "TaskTagEntity",
                 columns: table => new
                 {
@@ -146,8 +143,8 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    _ = table.PrimaryKey("PK_TaskTagEntity", x => x.Id);
-                    _ = table.ForeignKey(
+                    table.PrimaryKey("PK_TaskTagEntity", x => x.Id);
+                    table.ForeignKey(
                         name: "FK_TaskTagEntity_Tasks_TaskId",
                         column: x => x.TaskId,
                         principalTable: "Tasks",
@@ -155,68 +152,61 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            _ = migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_Comments_TaskId",
                 table: "Comments",
                 column: "TaskId");
 
-            _ = migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_Comments_UserId",
                 table: "Comments",
                 column: "UserId");
 
-            _ = migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_TodoListId",
                 table: "Tasks",
                 column: "TodoListId");
 
-            _ = migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_UserEntityId",
                 table: "Tasks",
                 column: "UserEntityId");
 
-            _ = migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_TaskTagEntity_TaskId",
                 table: "TaskTagEntity",
                 column: "TaskId");
 
-            _ = migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_TodoListAccesses_TodoListId",
                 table: "TodoListAccesses",
                 column: "TodoListId");
 
-            _ = migrationBuilder.CreateIndex(
-                name: "IX_TodoListAccesses_UserId",
-                table: "TodoListAccesses",
-                column: "UserId");
-
-            _ = migrationBuilder.CreateIndex(
-                name: "IX_TodoLists_UserEntityId",
+            migrationBuilder.CreateIndex(
+                name: "IX_TodoLists_OwnerId",
                 table: "TodoLists",
-                column: "UserEntityId");
+                column: "OwnerId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            ArgumentNullException.ThrowIfNull(migrationBuilder);
-
-            _ = migrationBuilder.DropTable(
+            migrationBuilder.DropTable(
                 name: "Comments");
 
-            _ = migrationBuilder.DropTable(
+            migrationBuilder.DropTable(
                 name: "TaskTagEntity");
 
-            _ = migrationBuilder.DropTable(
+            migrationBuilder.DropTable(
                 name: "TodoListAccesses");
 
-            _ = migrationBuilder.DropTable(
+            migrationBuilder.DropTable(
                 name: "Tasks");
 
-            _ = migrationBuilder.DropTable(
+            migrationBuilder.DropTable(
                 name: "TodoLists");
 
-            _ = migrationBuilder.DropTable(
+            migrationBuilder.DropTable(
                 name: "Users");
         }
     }
