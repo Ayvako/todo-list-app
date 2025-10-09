@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using WebApp.Interfaces;
 using WebApp.Services;
 
 namespace WebApp;
@@ -26,6 +27,9 @@ internal static class Program
 
         _ = builder.Services.AddHttpClient<IUserWebApiService, UserWebApiService>(client =>
             client.BaseAddress = new Uri(baseUrl));
+
+        _ = builder.Services.AddScoped<ApiClientService>();
+
         _ = builder.Services.AddHttpContextAccessor();
 
         _ = builder.Services.AddSession();

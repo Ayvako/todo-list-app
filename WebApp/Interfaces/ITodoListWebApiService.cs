@@ -1,6 +1,6 @@
 using WebApp.Models.TodoLists;
 
-namespace WebApp.Services;
+namespace WebApp.Interfaces;
 
 public interface ITodoListWebApiService
 {

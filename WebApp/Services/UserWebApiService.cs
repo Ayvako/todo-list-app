@@ -1,6 +1,6 @@
-using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using WebApp.Interfaces;
 using WebApp.Models;
 using WebApp.Models.Users;
 
@@ -10,10 +10,13 @@ public class UserWebApiService : IUserWebApiService
 {
     private readonly HttpClient httpClient;
     private readonly JsonSerializerOptions jsonOptions;
+    private readonly ApiClientService apiClientService;
 
-    public UserWebApiService(HttpClient httpClient)
+    public UserWebApiService(HttpClient httpClient, ApiClientService apiClientService)
     {
         this.httpClient = httpClient;
+        this.apiClientService = apiClientService;
+
         this.jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -23,38 +26,31 @@ public class UserWebApiService : IUserWebApiService
 
     public async Task<UserLoginResponseModel?> LoginAsync(UserLoginModel model)
     {
-        var response = await this.httpClient.PostAsJsonAsync("api/User/login", model);
+        var result = await this.apiClientService.TryRequestAsync<UserLoginResponseModel>(
+            () => this.httpClient.PostAsJsonAsync("api/User/login", model)
+        );
 
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        if (result.Success && result.Data != null)
         {
-            return null;
+            return result.Data;
         }
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception($"Ошибка при входе: {response.StatusCode}");
-        }
-
-        var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>(this.jsonOptions);
-        return result;
+        Console.WriteLine($"Login error: {result.ErrorMessage}");
+        return null;
     }
 
     public async Task<UserLoginResponseModel?> RegisterAsync(UserRegisterModel model)
     {
-        var response = await this.httpClient.PostAsJsonAsync("api/User/register", model);
+        var result = await this.apiClientService.TryRequestAsync<UserLoginResponseModel>(
+            () => this.httpClient.PostAsJsonAsync("api/User/register", model)
+        );
 
-        if (response.StatusCode == HttpStatusCode.BadRequest ||
-            response.StatusCode == HttpStatusCode.Conflict)
+        if (result.Success && result.Data != null)
         {
-            return null;
+            return result.Data;
         }
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception($"Register error: {response.StatusCode}");
-        }
-
-        var result = await response.Content.ReadFromJsonAsync<UserLoginResponseModel>(this.jsonOptions);
-        return result;
+        Console.WriteLine($"Registration error: {result.ErrorMessage}");
+        return null;
     }
 }

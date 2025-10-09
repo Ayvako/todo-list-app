@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using WebApp.Interfaces;
 using WebApp.Models.Tasks;
 using WebApp.Models.Users;
 
@@ -10,12 +11,15 @@ public class TaskWebApiService : ITaskWebApiService
 {
     private readonly HttpClient httpClient;
     private readonly IHttpContextAccessor httpContextAccessor;
+    private readonly ApiClientService apiClientService;
     private readonly JsonSerializerOptions jsonOptions;
 
-    public TaskWebApiService(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)
+    public TaskWebApiService(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, ApiClientService apiClientService)
     {
         this.httpClient = httpClient;
         this.httpContextAccessor = httpContextAccessor;
+        this.apiClientService = apiClientService;
+
         this.jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -26,28 +30,31 @@ public class TaskWebApiService : ITaskWebApiService
     public async Task<TaskWebApiModel?> GetTaskByIdAsync(int id)
     {
         this.AttachToken();
-        return await this.httpClient.GetFromJsonAsync<TaskWebApiModel>($"api/Task/{id}", this.jsonOptions);
+
+        var result = await this.apiClientService.TryRequestAsync<TaskWebApiModel>(
+            () => this.httpClient.GetAsync($"api/Task/{id}"));
+
+        return result.Data;
     }
 
     public async Task<TaskWebApiModel?> AddTaskAsync(int todoListId, TaskCreateModel model)
     {
         this.AttachToken();
 
-        var response = await this.httpClient.PostAsJsonAsync($"api/Task/{todoListId}/tasks", model);
-        if (!response.IsSuccessStatusCode)
-        {
-            return null;
-        }
+        var result = await this.apiClientService.TryRequestAsync<TaskWebApiModel>(
+            () => this.httpClient.PostAsJsonAsync($"api/Task/{todoListId}/tasks", model));
 
-        return await response.Content.ReadFromJsonAsync<TaskWebApiModel>(this.jsonOptions);
+        return result.Data;
     }
 
     public async Task<bool> DeleteTaskAsync(int id)
     {
         this.AttachToken();
 
-        var response = await this.httpClient.DeleteAsync($"api/Task/{id}");
-        return response.IsSuccessStatusCode;
+        var result = await this.apiClientService.TryRequestAsync<object>(
+            () => this.httpClient.DeleteAsync($"api/Task/{id}"));
+
+        return result.Success;
     }
 
     public async Task<TaskWebApiModel?> UpdateTaskAsync(int id, TaskEditModel model)
@@ -62,34 +69,38 @@ public class TaskWebApiService : ITaskWebApiService
 
         if (!string.IsNullOrWhiteSpace(model.AssigneeName))
         {
-            var userResponse = await this.httpClient.GetAsync($"api/User/by-name/{model.AssigneeName}");
-            if (userResponse.IsSuccessStatusCode)
+            var userResult = await this.apiClientService.TryRequestAsync<UserWebApiModel>(
+                () => this.httpClient.GetAsync($"api/User/by-name/{model.AssigneeName}")
+            );
+
+            if (userResult.Success && userResult.Data != null)
             {
-                var userJson = await userResponse.Content.ReadAsStringAsync();
-                var user = JsonSerializer.Deserialize<UserWebApiModel>(userJson, this.jsonOptions);
-                if (user != null)
-                {
-                    assigneeId = user.Id;
-                }
+                assigneeId = userResult.Data.Id;
+            }
+            else
+            {
+                Console.WriteLine($"Unable to find user {model.AssigneeName}: {userResult.ErrorMessage}");
             }
         }
 
-        var response = await this.httpClient.PutAsJsonAsync($"api/Task/{id}", new TaskWebApiModel
-        {
-            Title = model.Title,
-            Description = model.Description,
-            DueDate = model.DueDate,
-            Status = model.Status,
-            AssigneeName = model.AssigneeName,
-            AssigneeId = assigneeId,
-        });
+        var taskResult = await this.apiClientService.TryRequestAsync<TaskWebApiModel>(
+            () => this.httpClient.PutAsJsonAsync($"api/Task/{id}", new TaskWebApiModel
+            {
+                Title = model.Title,
+                Description = model.Description,
+                DueDate = model.DueDate,
+                Status = model.Status,
+                AssigneeName = model.AssigneeName,
+                AssigneeId = assigneeId,
+            })
+        );
 
-        if (!response.IsSuccessStatusCode)
+        if (!taskResult.Success)
         {
-            return null;
+            Console.WriteLine($"❌ Ошибка при обновлении задачи {id}: {taskResult.ErrorMessage}");
         }
 
-        return await response.Content.ReadFromJsonAsync<TaskWebApiModel>(this.jsonOptions);
+        return taskResult.Data;
     }
 
     private void AttachToken()

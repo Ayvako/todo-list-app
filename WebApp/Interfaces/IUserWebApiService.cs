@@ -1,7 +1,7 @@
 using WebApp.Models;
 using WebApp.Models.Users;
 
-namespace WebApp.Services;
+namespace WebApp.Interfaces;
 
 public interface IUserWebApiService
 {

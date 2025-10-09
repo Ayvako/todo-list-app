@@ -1,18 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
+using WebApp.Interfaces;
 using WebApp.Models.Tasks;
-using WebApp.Services;
 
 namespace WebApp.Controllers;
 
 public class TaskController : Controller
 {
     private readonly ITaskWebApiService taskService;
-    private readonly IUserWebApiService userService;
 
-    public TaskController(ITaskWebApiService taskService, IUserWebApiService userService)
+    public TaskController(ITaskWebApiService taskService)
     {
         this.taskService = taskService;
-        this.userService = userService;
     }
 
     [HttpGet]
