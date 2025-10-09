@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Core.Enums;
+
 namespace WebApp.Models.Users;
 
 public class UserWebApiModel
@@ -8,7 +11,8 @@ public class UserWebApiModel
 
     public string Email { get; set; } = string.Empty;
 
-    public string Role { get; set; } = string.Empty;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public UserRole Role { get; set; }
 
     public string Token { get; set; } = string.Empty;
 }

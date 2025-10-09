@@ -7,10 +7,12 @@ namespace WebApp.Controllers;
 public class TaskController : Controller
 {
     private readonly ITaskWebApiService taskService;
+    private readonly IUserWebApiService userService;
 
-    public TaskController(ITaskWebApiService taskService)
+    public TaskController(ITaskWebApiService taskService, IUserWebApiService userService)
     {
         this.taskService = taskService;
+        this.userService = userService;
     }
 
     [HttpGet]
@@ -81,21 +83,23 @@ public class TaskController : Controller
             return this.NotFound();
         }
 
-        return this.View(task);
+        TaskEditModel model = new TaskEditModel
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            DueDate = task.DueDate,
+            Status = task.Status,
+            AssigneeName = task.AssigneeName,
+        };
+
+        return this.View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(TaskEditModel model)
     {
-        if (!this.ModelState.IsValid)
-        {
-            var errors = this.ModelState.Values.SelectMany(v => v.Errors)
-                                          .Select(e => e.ErrorMessage)
-                                          .ToList();
-            return this.Content(string.Join("<br/>", errors));
-        }
-
         if (!this.ModelState.IsValid)
         {
             return this.View(model);

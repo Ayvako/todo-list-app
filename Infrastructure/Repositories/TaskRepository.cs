@@ -19,6 +19,7 @@ public class TaskRepository : ITaskRepository
         return await this.db.Tasks
             .Include(t => t.Tags)
             .Include(t => t.Comments)
+            .Include(t => t.Assignee)
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id);
     }
@@ -67,7 +68,7 @@ public class TaskRepository : ITaskRepository
         entity.Description = updatedTask.Description;
         entity.DueDate = updatedTask.DueDate;
         entity.Status = updatedTask.Status;
-        entity.Assignee = updatedTask.Assignee;
+        entity.AssigneeId = updatedTask.AssigneeId;
 
         _ = await this.db.SaveChangesAsync();
         return entity;

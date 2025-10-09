@@ -29,6 +29,18 @@ public class TodoListDbContext : DbContext
         _ = modelBuilder.Entity<TodoListAccessEntity>()
             .HasKey(t => new { t.UserId, t.TodoListId });
 
+        _ = modelBuilder.Entity<TaskEntity>()
+            .HasOne(t => t.Assignee)
+            .WithMany(u => u.AssignedTasks)
+            .HasForeignKey(t => t.AssigneeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        _ = modelBuilder.Entity<TaskEntity>()
+            .HasOne(t => t.TodoList)
+            .WithMany(l => l.Tasks)
+            .HasForeignKey(t => t.TodoListId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         _ = modelBuilder.Entity<TodoListAccessEntity>()
             .HasOne(a => a.User)
             .WithMany(l => l.AccessList)

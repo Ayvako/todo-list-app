@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WebApp.Models.Tasks;
+using WebApp.Models.Users;
 
 namespace WebApp.Services;
 
@@ -57,13 +58,30 @@ public class TaskWebApiService : ITaskWebApiService
             return null;
         }
 
+        int? assigneeId = null;
+
+        if (!string.IsNullOrWhiteSpace(model.AssigneeName))
+        {
+            var userResponse = await this.httpClient.GetAsync($"api/User/by-name/{model.AssigneeName}");
+            if (userResponse.IsSuccessStatusCode)
+            {
+                var userJson = await userResponse.Content.ReadAsStringAsync();
+                var user = JsonSerializer.Deserialize<UserWebApiModel>(userJson, this.jsonOptions);
+                if (user != null)
+                {
+                    assigneeId = user.Id;
+                }
+            }
+        }
+
         var response = await this.httpClient.PutAsJsonAsync($"api/Task/{id}", new TaskWebApiModel
         {
             Title = model.Title,
             Description = model.Description,
             DueDate = model.DueDate,
             Status = model.Status,
-            Assignee = model.Assignee,
+            AssigneeName = model.AssigneeName,
+            AssigneeId = assigneeId,
         });
 
         if (!response.IsSuccessStatusCode)

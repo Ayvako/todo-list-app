@@ -116,8 +116,9 @@ public class TodoListService : ITodoListService
             CreatedAt = task.CreatedAt,
             DueDate = task.DueDate,
             Status = task.Status,
-            Assignee = task.Assignee,
-            TodoListId = task.TodoListId
+            AssigneeId = task.AssigneeId,
+            TodoListId = task.TodoListId,
+            AssigneeName = task.Assignee?.UserName ?? null,
         };
     }
 }

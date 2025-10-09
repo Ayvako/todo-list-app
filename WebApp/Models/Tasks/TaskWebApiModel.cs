@@ -16,7 +16,9 @@ public class TaskWebApiModel
 
     public TaskStatus Status { get; set; } = TaskStatus.NotStarted;
 
-    public string Assignee { get; set; } = string.Empty;
+    public int? AssigneeId { get; set; }
+
+    public string? AssigneeName { get; set; }
 
     public int TodoListId { get; set; }
 }

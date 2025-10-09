@@ -18,6 +18,7 @@ public class TaskEditModel
     [Required]
     public TaskStatus Status { get; set; }
 
-    [Required]
-    public string Assignee { get; set; } = string.Empty;
+    public string? AssigneeName { get; set; }
+
+    public int? AssigneeId { get; set; }
 }

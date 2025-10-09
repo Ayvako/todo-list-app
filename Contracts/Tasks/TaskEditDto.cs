@@ -24,6 +24,5 @@ public class TaskEditDto
     [Required]
     public int TodoListId { get; set; }
 
-    [StringLength(100)]
-    public string Assignee { get; set; } = string.Empty;
+    public int? AssigneeId { get; set; }
 }

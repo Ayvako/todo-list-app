@@ -1,4 +1,5 @@
 using Core.Entities.TodoList;
+using Core.Entities.TodoUser;
 using TaskStatus = Core.Enums.TaskStatus;
 
 namespace Core.Entities.Task;
@@ -17,7 +18,9 @@ public class TaskEntity
 
     public TaskStatus Status { get; set; } = TaskStatus.NotStarted;
 
-    public string Assignee { get; set; } = string.Empty;
+    public int? AssigneeId { get; set; }
+
+    public UserEntity? Assignee { get; set; }
 
     public int TodoListId { get; set; }
 

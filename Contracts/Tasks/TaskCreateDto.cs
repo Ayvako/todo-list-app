@@ -16,7 +16,4 @@ public class TaskCreateDto
 
     [Required]
     public DateTime DueDate { get; set; } = DateTime.UtcNow.AddDays(7);
-
-    [StringLength(100)]
-    public string Assignee { get; set; } = string.Empty;
 }

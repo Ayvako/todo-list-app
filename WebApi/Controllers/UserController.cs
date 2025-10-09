@@ -1,6 +1,7 @@
 using Application.Interfaces;
 using Contracts.Users;
 using Microsoft.AspNetCore.Mvc;
+using WebApp.Models.Users;
 
 namespace WebApi.Controllers;
 
@@ -15,6 +16,24 @@ public class UserController : ControllerBase
     {
         this.userService = userService;
         this.jwtService = jwtService;
+    }
+
+    [HttpGet("by-name/{username}")]
+    public async Task<ActionResult<UserWebApiModel?>> GetByName(string username)
+    {
+        var user = await userService.GetUserByNameAsync(username);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return new UserWebApiModel
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            Role = user.Role,
+        };
     }
 
     [HttpPost("register")]

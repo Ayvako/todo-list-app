@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(TodoListDbContext))]
-    partial class TodoListDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008221107_AddAssigneeRelation")]
+    partial class AddAssigneeRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,7 +63,7 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AssigneeId")
+                    b.Property<int>("AssigneeId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -213,7 +216,8 @@ namespace Infrastructure.Migrations
                     b.HasOne("Core.Entities.TodoUser.UserEntity", "Assignee")
                         .WithMany("AssignedTasks")
                         .HasForeignKey("AssigneeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Core.Entities.TodoList.TodoListEntity", "TodoList")
                         .WithMany("Tasks")

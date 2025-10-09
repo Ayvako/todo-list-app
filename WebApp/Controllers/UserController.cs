@@ -43,8 +43,8 @@ public class UserController : Controller
 
         this.HttpContext.Session.SetString("AuthToken", response.Token);
         this.HttpContext.Session.SetInt32("UserId", response.User.Id);
-        this.HttpContext.Session.SetString("UserName", response.User.UserName);
-        this.HttpContext.Session.SetString("UserRole", response.User.Role);
+        this.HttpContext.Session.SetString("UserName", response.User.UserName.ToString());
+        this.HttpContext.Session.SetString("UserRole", response.User.Role.ToString());
 
         return this.RedirectToAction("Index", "TodoList");
     }
@@ -79,7 +79,7 @@ public class UserController : Controller
 
         this.HttpContext.Session.SetInt32("UserId", response.User.Id);
         this.HttpContext.Session.SetString("UserName", response.User.UserName);
-        this.HttpContext.Session.SetString("UserRole", response.User.Role);
+        this.HttpContext.Session.SetString("UserRole", response.User.Role.ToString());
         this.HttpContext.Session.SetString("AuthToken", response.Token);
 
         return this.RedirectToAction("Index", "TodoList");

@@ -31,6 +31,13 @@ public class UserService : IUserService
             .ToListAsync();
     }
 
+    public async Task<UserDto?> GetUserByNameAsync(string username)
+    {
+        var user = await this.dbContext.Users.FirstOrDefaultAsync(u => u.UserName == username);
+
+        return user == null ? null : MapToDto(user);
+    }
+
     public async Task<UserDto?> RegisterAsync(string username, string email, string password)
     {
         if (await this.dbContext.Users.AnyAsync(u => u.Email == email))

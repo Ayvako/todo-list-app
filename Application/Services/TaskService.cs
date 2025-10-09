@@ -2,6 +2,7 @@ using Core.Entities.Task;
 using Core.Interfaces;
 using Contracts.Tasks;
 using Application.Interfaces;
+using Contracts.Users;
 
 namespace Application.Services;
 
@@ -31,7 +32,6 @@ public class TaskService : ITaskService
             Title = dto.Title,
             Description = dto.Description,
             DueDate = dto.DueDate,
-            Assignee = dto.Assignee,
             TodoListId = todoListId
         };
 
@@ -64,7 +64,7 @@ public class TaskService : ITaskService
         existing.Title = dto.Title;
         existing.Description = dto.Description;
         existing.DueDate = dto.DueDate;
-        existing.Assignee = dto.Assignee;
+        existing.AssigneeId = dto.AssigneeId;
         existing.Status = dto.Status;
 
         var updated = await this.repository.UpdateTaskAsync(id, existing);
@@ -98,8 +98,17 @@ public class TaskService : ITaskService
             CreatedAt = entity.CreatedAt,
             DueDate = entity.DueDate,
             Status = entity.Status,
-            Assignee = entity.Assignee,
-            TodoListId = entity.TodoListId
+            TodoListId = entity.TodoListId,
+            AssigneeId = entity.AssigneeId,
+            Assignee = entity.Assignee == null
+                ? null
+                : new UserDto
+                {
+                    Id = entity.Assignee.Id,
+                    Email = entity.Assignee.Email,
+                    Role = entity.Assignee.Role,
+                    UserName = entity.Assignee.UserName
+                }
         };
     }
 }

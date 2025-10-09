@@ -1,3 +1,4 @@
+using Contracts.Users;
 using TaskStatus = Core.Enums.TaskStatus;
 
 namespace Contracts.Tasks;
@@ -16,7 +17,9 @@ public class TaskDto
 
     public TaskStatus Status { get; set; } = TaskStatus.NotStarted;
 
-    public string Assignee { get; set; } = string.Empty;
+    public int? AssigneeId { get; set; }
+
+    public UserDto? Assignee { get; set; }
 
     public int TodoListId { get; set; }
 
