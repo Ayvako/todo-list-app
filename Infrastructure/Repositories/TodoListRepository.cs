@@ -25,6 +25,17 @@ public class TodoListRepository : ITodoListRepository
             .ToListAsync();
     }
 
+    public async Task<List<TodoListEntity>> GetByUserIdAsync(int userId)
+    {
+        return await this.db.TodoLists
+            .Where(l => l.OwnerId == userId
+                        || l.AccessList.Any(a => a.UserId == userId))
+            .Include(t => t.Tasks)
+                .ThenInclude(t => t.Assignee)
+            .Include(l => l.AccessList)
+            .ToListAsync();
+    }
+
     public async Task<TodoListEntity?> GetByIdAsync(int id)
     {
         return await this.db.TodoLists

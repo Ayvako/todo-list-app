@@ -21,7 +21,16 @@ public class TodoListController : ControllerBase
         this.service = service;
     }
 
-    [HttpGet]
+    [HttpGet("user")]
+    public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetUserLists()
+    {
+        var userId = this.GetUserId();
+
+        var lists = await this.service.GetByUserAsync(userId);
+        return this.Ok(lists);
+    }
+
+    [HttpGet("all")]
     public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetAll()
     {
         var userId = this.GetUserId();

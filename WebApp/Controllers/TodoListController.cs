@@ -16,7 +16,7 @@ public class TodoListController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var lists = await this.service.GetAllAsync();
+        var lists = await this.service.GetByUserAsync();
         return this.View(lists);
     }
 

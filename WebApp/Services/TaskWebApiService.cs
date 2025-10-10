@@ -1,6 +1,4 @@
 using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
 using WebApp.Models.Users;
@@ -12,19 +10,12 @@ public class TaskWebApiService : ITaskWebApiService
     private readonly HttpClient httpClient;
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly ApiClientService apiClientService;
-    private readonly JsonSerializerOptions jsonOptions;
 
     public TaskWebApiService(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, ApiClientService apiClientService)
     {
         this.httpClient = httpClient;
         this.httpContextAccessor = httpContextAccessor;
         this.apiClientService = apiClientService;
-
-        this.jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        };
-        this.jsonOptions.Converters.Add(new JsonStringEnumConverter());
     }
 
     public async Task<TaskWebApiModel?> GetTaskByIdAsync(int id)
@@ -70,8 +61,7 @@ public class TaskWebApiService : ITaskWebApiService
         if (!string.IsNullOrWhiteSpace(model.AssigneeName))
         {
             var userResult = await this.apiClientService.TryRequestAsync<UserWebApiModel>(
-                () => this.httpClient.GetAsync($"api/User/by-name/{model.AssigneeName}")
-            );
+                () => this.httpClient.GetAsync($"api/User/by-name/{model.AssigneeName}"));
 
             if (userResult.Success && userResult.Data != null)
             {
@@ -92,12 +82,11 @@ public class TaskWebApiService : ITaskWebApiService
                 Status = model.Status,
                 AssigneeName = model.AssigneeName,
                 AssigneeId = assigneeId,
-            })
-        );
+            }));
 
         if (!taskResult.Success)
         {
-            Console.WriteLine($"❌ Ошибка при обновлении задачи {id}: {taskResult.ErrorMessage}");
+            Console.WriteLine($"Error updating task {id}: {taskResult.ErrorMessage}");
         }
 
         return taskResult.Data;

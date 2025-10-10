@@ -1,6 +1,4 @@
 using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using WebApp.Interfaces;
 using WebApp.Models.TodoLists;
 
@@ -10,7 +8,6 @@ public class TodoListWebApiService : ITodoListWebApiService
 {
     private readonly HttpClient httpClient;
     private readonly IHttpContextAccessor httpContextAccessor;
-    private readonly JsonSerializerOptions jsonOptions;
     private readonly ApiClientService apiClientService;
 
     public TodoListWebApiService(
@@ -21,12 +18,6 @@ public class TodoListWebApiService : ITodoListWebApiService
         this.httpClient = httpClient;
         this.httpContextAccessor = httpContextAccessor;
         this.apiClientService = apiClientService;
-
-        this.jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        };
-        this.jsonOptions.Converters.Add(new JsonStringEnumConverter());
     }
 
     public async Task<IEnumerable<TodoListWebApiModel>> GetAllAsync()
@@ -34,8 +25,22 @@ public class TodoListWebApiService : ITodoListWebApiService
         this.AttachToken();
 
         var result = await this.apiClientService.TryRequestAsync<IEnumerable<TodoListWebApiModel>>(
-            () => this.httpClient.GetAsync("api/TodoList")
-        );
+            () => this.httpClient.GetAsync("api/TodoList/all"));
+
+        if (result.Success && result.Data != null)
+        {
+            return result.Data;
+        }
+
+        return Enumerable.Empty<TodoListWebApiModel>();
+    }
+
+    public async Task<IEnumerable<TodoListWebApiModel>> GetByUserAsync()
+    {
+        this.AttachToken();
+
+        var result = await this.apiClientService.TryRequestAsync<IEnumerable<TodoListWebApiModel>>(
+            () => this.httpClient.GetAsync($"api/TodoList/user"));
 
         if (result.Success && result.Data != null)
         {
@@ -50,8 +55,7 @@ public class TodoListWebApiService : ITodoListWebApiService
         this.AttachToken();
 
         var result = await this.apiClientService.TryRequestAsync<TodoListWebApiModel>(
-            () => this.httpClient.GetAsync($"api/TodoList/{id}")
-        );
+            () => this.httpClient.GetAsync($"api/TodoList/{id}"));
 
         return result.Success ? result.Data : null;
     }
@@ -61,8 +65,7 @@ public class TodoListWebApiService : ITodoListWebApiService
         this.AttachToken();
 
         var result = await this.apiClientService.TryRequestAsync<TodoListWebApiModel>(
-            () => this.httpClient.PostAsJsonAsync("api/TodoList", model)
-        );
+            () => this.httpClient.PostAsJsonAsync("api/TodoList", model));
 
         if (!result.Success)
         {
@@ -77,8 +80,7 @@ public class TodoListWebApiService : ITodoListWebApiService
         this.AttachToken();
 
         var result = await this.apiClientService.TryRequestAsync<TodoListWebApiModel>(
-            () => this.httpClient.PutAsJsonAsync($"api/TodoList/{id}", model)
-        );
+            () => this.httpClient.PutAsJsonAsync($"api/TodoList/{id}", model));
 
         return result.Data;
     }
@@ -88,8 +90,7 @@ public class TodoListWebApiService : ITodoListWebApiService
         this.AttachToken();
 
         var result = await this.apiClientService.TryRequestAsync<object>(
-            () => this.httpClient.DeleteAsync($"api/TodoList/{id}")
-        );
+            () => this.httpClient.DeleteAsync($"api/TodoList/{id}"));
 
         return result.Success;
     }

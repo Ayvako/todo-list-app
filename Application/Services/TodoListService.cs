@@ -22,6 +22,12 @@ public class TodoListService : ITodoListService
         return entities.Select(e => MapToWebApiModel(e, currentUserId)).ToList();
     }
 
+    public async Task<IEnumerable<TodoListWebApiModel>> GetByUserAsync(int userId)
+    {
+        var entities = await this.repository.GetByUserIdAsync(userId);
+        return entities.Select(e => MapToWebApiModel(e, userId)).ToList();
+    }
+
     public async Task<TodoListWebApiModel?> GetByIdAsync(int id, int currentUserId)
     {
         var entity = await this.repository.GetByIdAsync(id);

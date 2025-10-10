@@ -27,8 +27,7 @@ public class UserWebApiService : IUserWebApiService
     public async Task<UserLoginResponseModel?> LoginAsync(UserLoginModel model)
     {
         var result = await this.apiClientService.TryRequestAsync<UserLoginResponseModel>(
-            () => this.httpClient.PostAsJsonAsync("api/User/login", model)
-        );
+            () => this.httpClient.PostAsJsonAsync("api/User/login", model));
 
         if (result.Success && result.Data != null)
         {
@@ -42,8 +41,7 @@ public class UserWebApiService : IUserWebApiService
     public async Task<UserLoginResponseModel?> RegisterAsync(UserRegisterModel model)
     {
         var result = await this.apiClientService.TryRequestAsync<UserLoginResponseModel>(
-            () => this.httpClient.PostAsJsonAsync("api/User/register", model)
-        );
+            () => this.httpClient.PostAsJsonAsync("api/User/register", model));
 
         if (result.Success && result.Data != null)
         {

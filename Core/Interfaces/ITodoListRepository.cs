@@ -9,6 +9,8 @@ public interface ITodoListRepository
 
     Task<TodoListEntity?> GetByIdAsync(int id);
 
+    Task<List<TodoListEntity>> GetByUserIdAsync(int userId);
+
     Task<TodoListEntity> AddAsync(TodoListEntity todoList);
 
     Task<IEnumerable<TaskEntity>> GetTasksByListIdAsync(int todoListId);
