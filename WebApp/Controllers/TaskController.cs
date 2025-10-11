@@ -64,7 +64,7 @@ public class TaskController : Controller
         }
 
         _ = await this.taskService.DeleteTaskAsync(id);
-        return this.RedirectToAction("Index", "TodoList");
+        return this.RedirectToAction("Details", "TodoList");
     }
 
     [HttpGet]
@@ -116,6 +116,6 @@ public class TaskController : Controller
             return this.View(model);
         }
 
-        return this.RedirectToAction("Index", "TodoList");
+        return this.RedirectToAction("Details", "TodoList");
     }
 }

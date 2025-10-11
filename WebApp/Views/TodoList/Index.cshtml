@@ -1,14 +1,18 @@
-@using Microsoft.AspNetCore.Http
+@using System.Security.Claims
 @using WebApp.Models.TodoLists
+@inject IHttpContextAccessor HttpContextAccessor
 @model IEnumerable<TodoListWebApiModel>
 
 @{
     ViewData["Title"] = "Todo Lists";
+
+    var user = HttpContextAccessor.HttpContext?.User;
+    var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
 }
 
 <h2>Todo Lists</h2>
 
-@if (Context.Session.GetInt32("UserId") != null)
+@if (isAuthenticated)
 {
     <div class="mb-3">
         <a asp-action="Create" class="btn btn-success">Add Todo List</a>
@@ -21,7 +25,7 @@
         <div class="col">
             <div class="card h-100 shadow-sm position-relative">
 
-                @if (Context.Session.GetInt32("UserId") != null && list.CanEdit)
+                @if (list.CanEdit)
                 {
                     <!-- Delete list -->
                     <form asp-action="Delete" asp-route-id="@list.Id" method="post"
@@ -41,10 +45,16 @@
                 }
 
                 <div class="card-body">
-                    <h5 class="card-title">@list.Title</h5>
+                    <h5 class="card-title">
+                        @list.Title
+                        @if (!list.CanEdit)
+                        {
+                            <span class="badge bg-secondary ms-2">Read-only</span>
+                        }
+                    </h5>
                     <p class="card-text">@list.Description</p>
 
-                    @if (Context.Session.GetInt32("UserId") != null && list.CanEdit)
+                    @if (list.CanEdit)
                     {
                         <!-- Add task -->
                         <a asp-controller="Task" asp-action="Add" asp-route-todoListId="@list.Id"
@@ -73,7 +83,7 @@
                                                 <div class="text-end">
                                                     <span class="badge @GetStatusBadgeClass(task.Status) rounded-pill">@task.Status</span>
 
-                                                    @if (Context.Session.GetInt32("UserId") != null && list.CanEdit)
+                                                    @if (list.CanEdit)
                                                     {
                                                         <!-- Edit task -->
                                                         <a asp-controller="Task" asp-action="Edit" asp-route-id="@task.Id"

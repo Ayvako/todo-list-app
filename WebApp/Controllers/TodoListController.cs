@@ -31,7 +31,8 @@ public class TodoListController : Controller
         var list = await this.service.GetByIdAsync(id);
         if (list == null)
         {
-            return this.NotFound();
+            this.TempData["ErrorMessage"] = "List not found or access denied.";
+            return this.RedirectToAction("Index");
         }
 
         return this.View(list);

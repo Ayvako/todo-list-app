@@ -25,10 +25,11 @@ public class JwtService : IJwtService
         var key = Encoding.UTF8.GetBytes(this.config["Jwt:Key"]!);
         var claims = new[]
         {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
         new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString(CultureInfo.InvariantCulture)),
         new Claim(JwtRegisteredClaimNames.Email, user.Email),
         new Claim(ClaimTypes.Name, user.UserName),
-        new Claim(ClaimTypes.Role, user.Role.ToString())
+        new Claim(ClaimTypes.Role, user.Role.ToString()),
     };
 
         var token = new JwtSecurityToken(
@@ -36,7 +37,10 @@ public class JwtService : IJwtService
             audience: this.config["Jwt:Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddDays(7),
-            signingCredentials: new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+            signingCredentials: new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256
+            )
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);

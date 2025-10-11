@@ -27,18 +27,29 @@
     </style>
 </head>
 <body>
-    @using Microsoft.AspNetCore.Http
+    @using System.Security.Claims
     @inject IHttpContextAccessor HttpContextAccessor
+
+    @{
+        var user = HttpContextAccessor.HttpContext?.User;
+        var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+
+        string? username = null;
+        string? role = null;
+
+        if (isAuthenticated)
+        {
+            username = user.FindFirstValue(ClaimTypes.Name) ?? "Unknown";
+            role = user.FindFirstValue(ClaimTypes.Role) ?? "Unknown";
+        }
+    }
 
     <nav class="navbar navbar-dark bg-dark px-3">
         <a class="navbar-brand" href="/">TodoListApp</a>
 
         <div class="d-flex align-items-center ms-auto">
-            @if (HttpContextAccessor.HttpContext?.Session.GetInt32("UserId") != null)
+            @if (isAuthenticated)
             {
-                var username = HttpContextAccessor.HttpContext.Session.GetString("UserName");
-                var role = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
-
                 <span class="text-light me-3">
                     👤 @username (@role)
                 </span>

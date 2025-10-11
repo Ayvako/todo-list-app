@@ -1,5 +1,8 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using WebApp.Interfaces;
 using WebApp.Services;
 
@@ -17,6 +20,10 @@ internal static class Program
                  options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
              });
 
+        var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+        var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("Jwt:Key not found in config."));
+
         var baseUrl = builder.Configuration["WebApi:BaseUrl"];
 
         _ = builder.Services.AddHttpClient<ITodoListWebApiService, TodoListWebApiService>(client =>
@@ -32,8 +39,6 @@ internal static class Program
 
         _ = builder.Services.AddHttpContextAccessor();
 
-        _ = builder.Services.AddSession();
-
         _ = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
@@ -41,6 +46,37 @@ internal static class Program
                 options.LogoutPath = "/User/Logout";
                 options.ExpireTimeSpan = TimeSpan.FromHours(1);
             });
+
+        _ = builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    if (context.Request.Cookies.TryGetValue("jwt", out var token))
+                    {
+                        context.Token = token;
+                    }
+                    return Task.CompletedTask;
+                },
+            };
+        });
 
         _ = builder.Services.AddAuthorization();
 
@@ -57,7 +93,6 @@ internal static class Program
 
         _ = app.UseRouting();
 
-        _ = app.UseSession();
         _ = app.UseAuthentication();
         _ = app.UseAuthorization();
 

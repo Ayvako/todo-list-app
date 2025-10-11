@@ -30,13 +30,17 @@ public class TodoListService : ITodoListService
             }
         }
 
-        return accessibleLists.Select(MapToWebApiModel).ToList();
+        return accessibleLists
+            .Select(l => MapToWebApiModel(l, currentUserId))
+            .ToList();
     }
 
     public async Task<IEnumerable<TodoListWebApiModel>> GetByUserAsync(int userId)
     {
         var entities = await this.repository.GetByUserIdAsync(userId);
-        return entities.Select(MapToWebApiModel).ToList();
+        return entities
+            .Select(l => MapToWebApiModel(l, userId))
+            .ToList();
     }
 
     public async Task<TodoListWebApiModel?> GetByIdAsync(int listId, int currentUserId)
@@ -48,7 +52,7 @@ public class TodoListService : ITodoListService
         }
 
         var entity = await this.repository.GetByIdAsync(listId);
-        return entity == null ? null : MapToWebApiModel(entity);
+        return entity == null ? null : MapToWebApiModel(entity, currentUserId);
     }
 
     public async Task<IEnumerable<TaskWebApiModel>> GetTasksByListIdAsync(int listId, int currentUserId)
@@ -75,7 +79,7 @@ public class TodoListService : ITodoListService
         };
 
         var added = await this.repository.AddAsync(entity);
-        return MapToWebApiModel(added);
+        return MapToWebApiModel(added, userId);
     }
 
     public async Task<TodoListWebApiModel?> UpdateAsync(int listId, TodoListUpdateDto model, int userId)
@@ -95,7 +99,7 @@ public class TodoListService : ITodoListService
         };
 
         var updated = await this.repository.UpdateAsync(listId, entity);
-        return updated == null ? null : MapToWebApiModel(updated);
+        return updated == null ? null : MapToWebApiModel(updated, userId);
     }
 
     public async Task<bool> DeleteAsync(int listId, int userId)
@@ -149,7 +153,7 @@ public class TodoListService : ITodoListService
     public Task<bool> CanViewAsync(int todoListId, int userId)
         => this.repository.CanViewAsync(todoListId, userId);
 
-    private static TodoListWebApiModel MapToWebApiModel(TodoListEntity entity)
+    private static TodoListWebApiModel MapToWebApiModel(TodoListEntity entity, int userId)
     {
         return new TodoListWebApiModel
         {
@@ -157,6 +161,7 @@ public class TodoListService : ITodoListService
             Title = entity.Title,
             Description = entity.Description,
             Tasks = entity.Tasks?.Select(MapTaskToWebApiModel).ToList() ?? new List<TaskWebApiModel>(),
+            CanEdit = entity.OwnerId == userId,
         };
     }
 

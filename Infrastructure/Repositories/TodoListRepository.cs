@@ -41,6 +41,7 @@ public class TodoListRepository : ITodoListRepository
         return await this.db.TodoLists
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
+            .Include(l => l.AccessList)
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == id);
     }
@@ -57,6 +58,7 @@ public class TodoListRepository : ITodoListRepository
         var entity = await this.db.TodoLists
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
+            .Include(l => l.AccessList)
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == todoListId);
 

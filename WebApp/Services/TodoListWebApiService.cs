@@ -97,7 +97,7 @@ public class TodoListWebApiService : ITodoListWebApiService
 
     private void AttachToken()
     {
-        var token = this.httpContextAccessor.HttpContext?.Session.GetString("AuthToken");
+        var token = this.httpContextAccessor.HttpContext?.Request.Cookies["jwt"];
         if (!string.IsNullOrEmpty(token))
         {
             this.httpClient.DefaultRequestHeaders.Authorization =

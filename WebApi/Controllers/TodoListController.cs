@@ -149,6 +149,15 @@ public class TodoListController : ControllerBase
         }
     }
 
-    private int GetUserId() =>
-        int.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier)!, CultureInfo.InvariantCulture);
+    private int GetUserId()
+    {
+        var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(id))
+        {
+            throw new UnauthorizedAccessException("User not authenticated");
+        }
+
+        return int.Parse(id);
+    }
 }
