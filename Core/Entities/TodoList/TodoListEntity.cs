@@ -21,11 +21,5 @@ public class TodoListEntity
 
     public List<TaskEntity> Tasks { get; set; } = new List<TaskEntity>();
 
-    [NotMapped]
-    public List<int>? EditorIds { get; set; } = new List<int>();
-
-    [NotMapped]
-    public List<int>? ViewerIds { get; set; } = new List<int>();
-
     public List<TodoListAccessEntity> AccessList { get; set; } = new();
 }

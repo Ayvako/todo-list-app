@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Core.Entities.TodoList;
 using Core.Entities.TodoUser;
 using Core.Enums;
 
-namespace Core.Entities;
+namespace Core.Entities.TodoList;
 
 public class TodoListAccessEntity
 {
+    public int Id { get; set; }
+
     public int UserId { get; set; }
 
     [ForeignKey("UserId")]

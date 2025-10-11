@@ -21,10 +21,10 @@ public class UserController : ControllerBase
     [HttpGet("by-name/{username}")]
     public async Task<ActionResult<UserWebApiModel?>> GetByName(string username)
     {
-        var user = await userService.GetUserByNameAsync(username);
+        var user = await this.userService.GetUserByNameAsync(username);
         if (user == null)
         {
-            return NotFound();
+            return this.NotFound();
         }
 
         return new UserWebApiModel

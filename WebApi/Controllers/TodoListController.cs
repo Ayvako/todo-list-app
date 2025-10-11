@@ -21,15 +21,6 @@ public class TodoListController : ControllerBase
         this.service = service;
     }
 
-    [HttpGet("user")]
-    public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetUserLists()
-    {
-        var userId = this.GetUserId();
-
-        var lists = await this.service.GetByUserAsync(userId);
-        return this.Ok(lists);
-    }
-
     [HttpGet("all")]
     public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetAll()
     {
@@ -38,12 +29,28 @@ public class TodoListController : ControllerBase
         return this.Ok(lists);
     }
 
+    [HttpGet("user")]
+    public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetUserLists()
+    {
+        var userId = this.GetUserId();
+        var lists = await this.service.GetByUserAsync(userId);
+        return this.Ok(lists);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoListWebApiModel>> GetById(int id)
     {
         var userId = this.GetUserId();
-        var list = await this.service.GetByIdAsync(id, userId);
-        return list == null ? this.NotFound() : this.Ok(list);
+
+        try
+        {
+            var list = await this.service.GetByIdAsync(id, userId);
+            return list == null ? this.NotFound() : this.Ok(list);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return this.Forbid();
+        }
     }
 
     [HttpGet("{id}/tasks")]
@@ -51,14 +58,15 @@ public class TodoListController : ControllerBase
     {
         var userId = this.GetUserId();
 
-        var canView = await this.service.CanViewAsync(id, userId);
-        if (!canView)
+        try
+        {
+            var tasks = await this.service.GetTasksByListIdAsync(id, userId);
+            return this.Ok(tasks);
+        }
+        catch (UnauthorizedAccessException)
         {
             return this.Forbid();
         }
-
-        var tasks = await this.service.GetTasksByListIdAsync(id);
-        return tasks.Any() ? this.Ok(tasks) : this.NotFound();
     }
 
     [HttpPost]
@@ -79,9 +87,9 @@ public class TodoListController : ControllerBase
             var updated = await this.service.UpdateAsync(id, model, userId);
             return updated == null ? this.NotFound() : this.Ok(updated);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
     }
 
@@ -95,9 +103,49 @@ public class TodoListController : ControllerBase
             var deleted = await this.service.DeleteAsync(id, userId);
             return deleted ? this.Ok() : this.NotFound();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
+        }
+    }
+
+    [HttpPost("{id}/share")]
+    public async Task<IActionResult> Share(int id, [FromBody] ShareDto model)
+    {
+        var userId = this.GetUserId();
+
+        try
+        {
+            var success = await this.service.ShareAsync(id, model.UserId, model.Role, userId);
+            return success ? this.Ok() : this.BadRequest("Пользователь уже имеет доступ");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return this.Forbid();
+        }
+        catch (KeyNotFoundException)
+        {
+            return this.NotFound();
+        }
+    }
+
+    [HttpPost("{id}/revoke")]
+    public async Task<IActionResult> Revoke(int id, [FromBody] RevokeDto model)
+    {
+        var userId = this.GetUserId();
+
+        try
+        {
+            var success = await this.service.RevokeAccessAsync(id, model.UserId, userId);
+            return success ? this.Ok() : this.NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return this.Forbid();
+        }
+        catch (KeyNotFoundException)
+        {
+            return this.NotFound();
         }
     }
 

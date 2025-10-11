@@ -1,5 +1,6 @@
 using Core.Entities.Task;
 using Core.Entities.TodoList;
+using Core.Enums;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,6 @@ public class TodoListRepository : ITodoListRepository
         return await this.db.TodoLists
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
-
             .AsNoTracking()
             .ToListAsync();
     }
@@ -93,6 +93,101 @@ public class TodoListRepository : ITodoListRepository
         }
 
         _ = this.db.TodoLists.Remove(entity);
+        _ = await this.db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> CanViewAsync(int listId, int userId)
+    {
+        var list = await this.db.TodoLists
+            .Include(l => l.AccessList)
+            .FirstOrDefaultAsync(l => l.Id == listId);
+
+        if (list == null)
+        {
+            return false;
+        }
+
+        if (list.OwnerId == userId)
+        {
+            return true;
+        }
+
+        return list.AccessList.Any(a => a.UserId == userId);
+    }
+
+    public async Task<bool> CanEditAsync(int listId, int userId)
+    {
+        var list = await this.db.TodoLists
+            .Include(l => l.AccessList)
+            .FirstOrDefaultAsync(l => l.Id == listId);
+
+        if (list == null)
+        {
+            return false;
+        }
+
+        if (list.OwnerId == userId)
+        {
+            return true;
+        }
+
+        return list.AccessList.Any(a => a.UserId == userId && a.Role == TodoListAccessRole.Editor);
+    }
+
+    public async Task<bool> AddAccessAsync(int listId, int userId, TodoListAccessRole role)
+    {
+        var list = await this.db.TodoLists
+            .Include(l => l.AccessList)
+            .FirstOrDefaultAsync(l => l.Id == listId);
+
+        if (list == null)
+        {
+            return false;
+        }
+
+        if (list.AccessList.Any(a => a.UserId == userId))
+        {
+            return false;
+        }
+
+        list.AccessList.Add(new TodoListAccessEntity
+        {
+            TodoListId = listId,
+            UserId = userId,
+            Role = role
+        });
+
+        _ = await this.db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> RemoveAccessAsync(int listId, int userId)
+    {
+        var access = await this.db.TodoListAccesses
+            .FirstOrDefaultAsync(a => a.TodoListId == listId && a.UserId == userId);
+
+        if (access == null)
+        {
+            return false;
+        }
+
+        _ = this.db.TodoListAccesses.Remove(access);
+        _ = await this.db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UpdateAccessRoleAsync(int listId, int userId, TodoListAccessRole newRole)
+    {
+        var access = await this.db.TodoListAccesses
+            .FirstOrDefaultAsync(a => a.TodoListId == listId && a.UserId == userId);
+
+        if (access == null)
+        {
+            return false;
+        }
+
+        access.Role = newRole;
         _ = await this.db.SaveChangesAsync();
         return true;
     }
