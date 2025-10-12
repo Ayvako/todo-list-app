@@ -33,6 +33,7 @@ public class TodoListRepository : ITodoListRepository
             .Include(t => t.Tasks)
                 .ThenInclude(t => t.Assignee)
             .Include(l => l.AccessList)
+                .ThenInclude(a => a.User)
             .ToListAsync();
     }
 
@@ -42,6 +43,7 @@ public class TodoListRepository : ITodoListRepository
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
             .Include(l => l.AccessList)
+                .ThenInclude(a => a.User)
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == id);
     }
@@ -134,7 +136,8 @@ public class TodoListRepository : ITodoListRepository
             return true;
         }
 
-        return list.AccessList.Any(a => a.UserId == userId && a.Role == TodoListAccessRole.Editor);
+        var canEdit = list.AccessList.Any(a => a.UserId == userId && a.Role == TodoListAccessRole.Editor);
+        return canEdit;
     }
 
     public async Task<bool> AddAccessAsync(int listId, int userId, TodoListAccessRole role)

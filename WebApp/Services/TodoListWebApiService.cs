@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Core.Enums;
 using WebApp.Interfaces;
 using WebApp.Models.TodoLists;
 
@@ -81,7 +82,6 @@ public class TodoListWebApiService : ITodoListWebApiService
 
         var result = await this.apiClientService.TryRequestAsync<TodoListWebApiModel>(
             () => this.httpClient.PutAsJsonAsync($"api/TodoList/{id}", model));
-
         return result.Data;
     }
 
@@ -89,10 +89,24 @@ public class TodoListWebApiService : ITodoListWebApiService
     {
         this.AttachToken();
 
-        var result = await this.apiClientService.TryRequestAsync<object>(
-            () => this.httpClient.DeleteAsync($"api/TodoList/{id}"));
+        var response = await this.httpClient.DeleteAsync($"api/TodoList/{id}");
+        return response.IsSuccessStatusCode;
+    }
 
-        return result.Success;
+    public async Task<bool> ShareAsync(ShareModel model)
+    {
+        this.AttachToken();
+
+        var response = await this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/share", model);
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> RevokeAsync(RevokeModel model)
+    {
+        this.AttachToken();
+
+        var response = await this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/revoke", model);
+        return response.IsSuccessStatusCode;
     }
 
     private void AttachToken()

@@ -13,4 +13,8 @@ public class TodoListWebApiModel
     public List<TaskWebApiModel> Tasks { get; set; } = new List<TaskWebApiModel>();
 
     public bool CanEdit { get; set; }
+
+    public bool IsShared { get; set; }
+
+    public List<TodoListAccessWebApiModel> AccessList { get; set; } = new();
 }

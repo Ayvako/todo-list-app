@@ -1,6 +1,58 @@
+@using WebApp.Models.TodoLists
+@inject WebApp.Interfaces.ITodoListWebApiService TodoListService
+@inject IHttpContextAccessor HttpContextAccessor
+
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Dashboard";
+
+    var user = HttpContextAccessor.HttpContext?.User;
+    var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+
+    IEnumerable<TodoListWebApiModel> userLists = Enumerable.Empty<TodoListWebApiModel>();
+    if (isAuthenticated)
+    {
+        userLists = TodoListService.GetByUserAsync().GetAwaiter().GetResult();
+    }
 }
 
-<h1>Добро пожаловать!</h1>
-<p>Используйте меню, чтобы открыть список to-do списков.</p>
+<h1>Welcome!</h1>
+
+@if (!isAuthenticated)
+{
+    <p>To manage your to-do lists, please <a asp-controller="User" asp-action="Login">sign in</a>.</p>
+}
+else
+{
+    <p>Your latest lists:</p>
+
+    <div class="mb-3">
+        <a asp-controller="TodoList" asp-action="Create" class="btn btn-success">Create a new list</a>
+        <a asp-controller="TodoList" asp-action="Index" class="btn btn-primary ms-2">View all listings</a>
+    </div>
+
+    @if (userLists.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            @foreach (var list in userLists)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">@list.Title</h5>
+                            <p class="card-text">@list.Description</p>
+                            <a asp-controller="TodoList" asp-action="Details" asp-route-id="@list.Id"
+                               class="btn btn-primary btn-sm">Open list</a>
+                        </div>
+                        <div class="card-footer text-muted">
+                            Tasks: @(list.Tasks?.Count ?? 0)
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">You don't have any lists yet. Start by clicking the "Create a new list" button.</p>
+    }
+}

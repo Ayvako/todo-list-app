@@ -1,6 +1,7 @@
-using System.Globalization;
+using System.Collections.Generic;
 using System.Security.Claims;
 using Application.Interfaces;
+using Application.Services;
 using Contracts.TodoLists;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +16,12 @@ namespace WebApi.Controllers;
 public class TodoListController : ControllerBase
 {
     private readonly ITodoListService service;
+    private readonly IUserService userService;
 
-    public TodoListController(ITodoListService service)
+    public TodoListController(ITodoListService service, IUserService userService)
     {
         this.service = service;
+        this.userService = userService;
     }
 
     [HttpGet("all")]
@@ -114,18 +117,28 @@ public class TodoListController : ControllerBase
     {
         var userId = this.GetUserId();
 
+        var targetUser = await this.userService.GetUserByNameAsync(model.UserName);
+        if (targetUser == null)
+        {
+            return this.NotFound("User not found");
+        }
+
         try
         {
-            var success = await this.service.ShareAsync(id, model.UserId, model.Role, userId);
-            return success ? this.Ok() : this.BadRequest("Пользователь уже имеет доступ");
+            var success = await this.service.ShareAsync(id, targetUser.Id, model.Role, userId);
+            return success ? this.Ok() : this.BadRequest("Failed to share the list.");
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid();
+            return this.Forbid(ex.Message);
         }
-        catch (KeyNotFoundException)
+        catch (InvalidOperationException ex)
         {
-            return this.NotFound();
+            return this.BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return this.NotFound(ex.Message);
         }
     }
 
@@ -133,10 +146,15 @@ public class TodoListController : ControllerBase
     public async Task<IActionResult> Revoke(int id, [FromBody] RevokeDto model)
     {
         var userId = this.GetUserId();
+        var user = await this.userService.GetUserByNameAsync(model.UserName);
+        if (user == null)
+        {
+            return this.NotFound("User not found");
+        }
 
         try
         {
-            var success = await this.service.RevokeAccessAsync(id, model.UserId, userId);
+            var success = await this.service.RevokeAccessAsync(id, user.Id, userId);
             return success ? this.Ok() : this.NotFound();
         }
         catch (UnauthorizedAccessException)

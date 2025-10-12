@@ -2,5 +2,5 @@ namespace Contracts.TodoLists;
 
 public class RevokeDto
 {
-    public int UserId { get; set; }
+    public string UserName { get; set; } = null!;
 }

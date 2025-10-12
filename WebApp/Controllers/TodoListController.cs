@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
 using WebApp.Models.TodoLists;
 
 namespace WebApp.Controllers;
 
+[Authorize]
 public class TodoListController : Controller
 {
     private readonly ITodoListWebApiService service;
@@ -57,7 +59,7 @@ public class TodoListController : Controller
 
         if (created == null)
         {
-            this.ModelState.AddModelError(string.Empty, "Ошибка при создании списка");
+            this.ModelState.AddModelError(string.Empty, "Error creating list");
             return this.View(model);
         }
 
@@ -93,7 +95,7 @@ public class TodoListController : Controller
         var updated = await this.service.UpdateAsync(id, model);
         if (updated == null)
         {
-            this.ModelState.AddModelError(string.Empty, "Ошибка при обновлении списка");
+            this.ModelState.AddModelError(string.Empty, "Error updating list");
             return this.View(model);
         }
 
@@ -116,5 +118,36 @@ public class TodoListController : Controller
         }
 
         return this.RedirectToAction(nameof(this.Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Share(ShareModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest("Invalid request");
+        }
+
+        var success = await this.service.ShareAsync(model);
+        if (!success)
+        {
+            this.TempData["Error"] = "User already has access.";
+        }
+
+        return this.RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Revoke(RevokeModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest("Invalid request");
+        }
+
+        var success = await this.service.RevokeAsync(model);
+        return success ? this.RedirectToAction("Index") : this.NotFound();
     }
 }

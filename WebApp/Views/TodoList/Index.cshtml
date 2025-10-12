@@ -27,31 +27,109 @@
 
                 @if (list.CanEdit)
                 {
-                    <!-- Delete list -->
-                    <form asp-action="Delete" asp-route-id="@list.Id" method="post"
-                          class="position-absolute top-0 end-0 m-2">
-                        <button type="submit" class="btn btn-sm btn-danger" title="Delete list"
-                                onclick="return confirm('Delete this list?');">
-                            &times;
-                        </button>
-                    </form>
+                    <div class="position-absolute top-0 end-0 m-2 d-flex gap-1">
+                        <!-- Delete list -->
+                        <form asp-action="Delete" asp-route-id="@list.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-danger" title="Delete list"
+                                    onclick="return confirm('Delete this list?');">
+                                &times;
+                            </button>
+                        </form>
 
-                    <!-- Edit list -->
-                    <a asp-action="Edit" asp-route-id="@list.Id"
-                       class="btn btn-sm btn-outline-primary position-absolute top-0 end-0 me-5 mt-2"
-                       title="Edit list">
-                        <i class="bi bi-pencil"></i>
-                    </a>
+                        <!-- Edit list -->
+                        <a asp-action="Edit" asp-route-id="@list.Id"
+                           class="btn btn-sm btn-outline-primary" title="Edit list">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+
+                        <!-- Share/Revoke toggle -->
+                        <div class="position-relative">
+                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#share-@list.Id"
+                                    aria-expanded="false" aria-controls="share-@list.Id" title="Share / Revoke Access">
+                                <i class="bi bi-people"></i>
+                            </button>
+
+                            <!-- Collapsible Share/Revoke overlay -->
+                            <div class="collapse position-absolute end-0 mt-2" id="share-@list.Id" style="width: 320px; z-index: 20;">
+                                <div class="card card-body shadow-sm p-2">
+
+                                    @if (list.AccessList.Any())
+                                    {
+                                        <div class="mb-2">
+                                            <h6 class="fw-semibold">Current Access:</h6>
+                                            <ul class="list-group list-group-flush small">
+                                                @foreach (var access in list.AccessList)
+                                                {
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                        <div class="d-flex align-items-center gap-1">
+                                                            <i class="bi bi-person me-1"></i>
+                                                            <span>@access.UserName</span>
+                                                            <span class="badge bg-light text-dark border ms-1">@access.Role</span>
+                                                        </div>
+
+                                                        <form asp-action="Revoke" method="post" class="d-inline ms-2">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="TodoListId" value="@list.Id" />
+                                                            <input type="hidden" name="UserName" value="@access.UserName" />
+                                                            <button type="submit"
+                                                                    class="btn btn-sm btn-outline-danger py-0 px-1"
+                                                                    title="Удалить доступ"
+                                                                    style="line-height:1;">
+                                                                &times;
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                }
+                                            </ul>
+
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted small mb-2">No users have access yet.</p>
+                                    }
+
+                                    <form asp-action="Share" method="post" class="mb-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="TodoListId" value="@list.Id" />
+
+                                        <input type="text" class="form-control form-control-sm" name="UserName"
+                                               placeholder="Enter user nickname" required />
+
+                                        <select class="form-select form-select-sm" name="Role">
+                                            <option value="Viewer">Viewer</option>
+                                            <option value="Editor">Editor</option>
+                                        </select>
+
+                                        <button type="submit" class="btn btn-sm btn-success w-100 mt-2">Share</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
                 }
 
                 <div class="card-body">
                     <h5 class="card-title">
                         @list.Title
+
+                        @if (list.IsShared)
+                        {
+                            <span class="badge bg-info text-dark ms-2">
+                                <i class="bi bi-people-fill"></i> Shared
+                            </span>
+                        }
+
                         @if (!list.CanEdit)
                         {
                             <span class="badge bg-secondary ms-2">Read-only</span>
                         }
                     </h5>
+
                     <p class="card-text">@list.Description</p>
 
                     @if (list.CanEdit)
@@ -69,8 +147,9 @@
                     <div class="collapse" id="tasks-@list.Id">
                         @if (list.Tasks != null && list.Tasks.Any())
                         {
+                            <!-- Показываем только первые 3 задачи -->
                             <div class="row g-2 mt-2">
-                                @foreach (var task in list.Tasks)
+                                @foreach (var task in list.Tasks.Take(3))
                                 {
                                     <div class="col-12">
                                         <div class="card shadow-sm">
@@ -85,13 +164,12 @@
 
                                                     @if (list.CanEdit)
                                                     {
-                                                        <!-- Edit task -->
                                                         <a asp-controller="Task" asp-action="Edit" asp-route-id="@task.Id"
                                                            class="btn btn-sm btn-outline-primary ms-2">✎</a>
 
-                                                        <!-- Delete task -->
                                                         <form asp-controller="Task" asp-action="Delete" asp-route-id="@task.Id"
                                                               method="post" class="d-inline ms-2">
+                                                            @Html.AntiForgeryToken()
                                                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                                                     onclick="return confirm('Delete this task?');">
                                                                 &times;
@@ -104,12 +182,21 @@
                                     </div>
                                 }
                             </div>
+
+                            @if (list.Tasks.Count > 3)
+                            {
+                                <p class="text-muted mt-1 small">
+                                    And @((list.Tasks.Count - 3)) more task(s). See <a asp-action="Details" asp-route-id="@list.Id">Details</a>.
+                                </p>
+                            }
                         }
                         else
                         {
                             <p class="text-muted mt-2">No tasks yet</p>
                         }
+
                     </div>
+
                 </div>
 
                 <div class="card-footer text-end">
@@ -117,6 +204,7 @@
                 </div>
             </div>
         </div>
+
     }
 </div>
 

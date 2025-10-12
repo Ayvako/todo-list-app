@@ -116,6 +116,7 @@ public class TodoListService : ITodoListService
     public async Task<bool> ShareAsync(int listId, int targetUserId, TodoListAccessRole role, int currentUserId)
     {
         var list = await this.repository.GetByIdAsync(listId);
+
         if (list == null)
         {
             throw new KeyNotFoundException("List not found.");
@@ -124,6 +125,17 @@ public class TodoListService : ITodoListService
         if (list.OwnerId != currentUserId)
         {
             throw new UnauthorizedAccessException("Only the owner can share the list.");
+        }
+
+        if (targetUserId == list.OwnerId)
+        {
+            throw new InvalidOperationException("You cannot share the list with its owner.");
+        }
+        var alreadyShared = list.AccessList.Any(a => a.UserId == targetUserId);
+
+        if (alreadyShared)
+        {
+            throw new InvalidOperationException("The user already has access to this list.");
         }
 
         var added = await this.repository.AddAccessAsync(listId, targetUserId, role);
@@ -155,13 +167,27 @@ public class TodoListService : ITodoListService
 
     private static TodoListWebApiModel MapToWebApiModel(TodoListEntity entity, int userId)
     {
+        bool canEdit =
+        entity.OwnerId == userId ||
+        entity.AccessList?.Any(a => a.UserId == userId && a.Role == TodoListAccessRole.Editor) == true;
+
+        bool isShared = entity.AccessList?.Count > 0;
+
         return new TodoListWebApiModel
         {
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
             Tasks = entity.Tasks?.Select(MapTaskToWebApiModel).ToList() ?? new List<TaskWebApiModel>(),
-            CanEdit = entity.OwnerId == userId,
+            CanEdit = canEdit,
+            IsShared = isShared,
+            AccessList = entity.AccessList?
+            .Select(a => new TodoListAccessWebApiModel
+            {
+                UserName = a.User.UserName,
+                Role = a.Role.ToString()
+            })
+            .ToList() ?? new()
         };
     }
 

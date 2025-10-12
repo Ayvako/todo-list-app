@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
 
 namespace WebApp.Controllers;
 
+[Authorize]
 public class TaskController : Controller
 {
     private readonly ITaskWebApiService taskService;

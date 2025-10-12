@@ -15,4 +15,8 @@ public interface ITodoListWebApiService
     Task<TodoListWebApiModel?> UpdateAsync(int id, TodoListWebApiModel model);
 
     Task<bool> DeleteAsync(int id);
+
+    Task<bool> RevokeAsync(RevokeModel model);
+
+    Task<bool> ShareAsync(ShareModel model);
 }
