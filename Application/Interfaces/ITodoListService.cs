@@ -1,23 +1,22 @@
+using Contracts.Tasks;
 using Contracts.TodoLists;
 using Core.Enums;
-using WebApp.Models.Tasks;
-using WebApp.Models.TodoLists;
 
 namespace Application.Interfaces;
 
 public interface ITodoListService
 {
-    Task<IEnumerable<TodoListWebApiModel>> GetAllAsync(int currentUserId);
+    Task<IEnumerable<TodoListDto>> GetAllAsync(int currentUserId);
 
-    Task<TodoListWebApiModel?> GetByIdAsync(int listId, int currentUserId);
+    Task<TodoListDto?> GetByIdAsync(int listId, int currentUserId);
 
-    Task<IEnumerable<TodoListWebApiModel>> GetByUserAsync(int userId);
+    Task<IEnumerable<TodoListDto>> GetByUserAsync(int userId);
 
-    Task<IEnumerable<TaskWebApiModel>> GetTasksByListIdAsync(int listId, int currentUserId);
+    Task<IEnumerable<TaskDto>> GetTasksByListIdAsync(int listId, int currentUserId);
 
-    Task<TodoListWebApiModel> AddAsync(TodoListCreateDto model, int userId);
+    Task<TodoListDto> AddAsync(TodoListCreateDto model, int userId);
 
-    Task<TodoListWebApiModel?> UpdateAsync(int listId, TodoListUpdateDto model, int userId);
+    Task<TodoListDto?> UpdateAsync(int listId, TodoListUpdateDto model, int userId);
 
     Task<bool> DeleteAsync(int listId, int userId);
 

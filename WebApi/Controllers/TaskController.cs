@@ -75,6 +75,14 @@ public class TaskController : ControllerBase
         }
     }
 
+    [HttpGet("AssignedTasks")]
+    public async Task<ActionResult<IEnumerable<TaskWebApiModel>>> GetAssignedTasksAsync()
+    {
+        var userId = this.GetUserId();
+        var lists = await this.taskService.GetAssignedTasksAsync(userId);
+        return this.Ok(lists);
+    }
+
     private int GetUserId() =>
                 int.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier)!, CultureInfo.InvariantCulture);
 }

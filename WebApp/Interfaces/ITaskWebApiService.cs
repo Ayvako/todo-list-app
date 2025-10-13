@@ -11,4 +11,6 @@ public interface ITaskWebApiService
     Task<bool> DeleteTaskAsync(int id);
 
     Task<TaskWebApiModel?> UpdateTaskAsync(int id, TaskEditModel model);
+
+    Task<IEnumerable<TaskWebApiModel?>> GetAssignedTasksAsync();
 }

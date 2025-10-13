@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using WebApp.Models.Users;
 using TaskStatus = Core.Enums.TaskStatus;
 
 namespace WebApp.Models.Tasks;
@@ -17,6 +18,8 @@ public class TaskEditModel
 
     [Required]
     public TaskStatus Status { get; set; }
+
+    public UserWebApiModel? Assignee { get; set; }
 
     public string? AssigneeName { get; set; }
 

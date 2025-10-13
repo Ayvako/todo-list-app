@@ -60,12 +60,12 @@ public class TodoListWebApiService : ITodoListWebApiService
         return result.Success ? result.Data : null;
     }
 
-    public async Task<TodoListWebApiModel?> AddAsync(TodoListWebApiModel model)
+    public async Task<TodoListWebApiModel?> AddAsync(TodoListCreateModel model)
     {
         this.AttachToken();
 
         var result = await this.apiClientService.TryRequestAsync<TodoListWebApiModel>(
-            () => this.httpClient.PostAsJsonAsync("api/TodoList", model));
+        () => this.httpClient.PostAsJsonAsync("api/TodoList", model));
 
         if (!result.Success)
         {

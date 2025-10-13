@@ -28,6 +28,15 @@ public class TaskWebApiService : ITaskWebApiService
         return result.Data;
     }
 
+    public async Task<IEnumerable<TaskWebApiModel?>> GetAssignedTasksAsync()
+    {
+        this.AttachToken();
+        var result = await this.apiClientService.TryRequestAsync<IEnumerable<TaskWebApiModel?>>(
+            () => this.httpClient.GetAsync($"api/Task/AssignedTasks"));
+
+        return result.Data;
+    }
+
     public async Task<TaskWebApiModel?> AddTaskAsync(int todoListId, TaskCreateModel model)
     {
         this.AttachToken();

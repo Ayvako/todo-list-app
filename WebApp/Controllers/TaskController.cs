@@ -16,6 +16,13 @@ public class TaskController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var lists = await this.taskService.GetAssignedTasksAsync();
+        return this.View(lists);
+    }
+
+    [HttpGet]
     public IActionResult Add(int todoListId)
     {
         if (!this.ModelState.IsValid)
@@ -90,7 +97,7 @@ public class TaskController : Controller
             Description = task.Description,
             DueDate = task.DueDate,
             Status = task.Status,
-            AssigneeName = task.AssigneeName,
+            AssigneeName = task.Assignee.UserName,
         };
 
         return this.View(model);

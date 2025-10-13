@@ -1,3 +1,4 @@
+using WebApp.Models.Users;
 using TaskStatus = Core.Enums.TaskStatus;
 
 namespace WebApp.Models.Tasks;
@@ -15,6 +16,8 @@ public class TaskWebApiModel
     public DateTime DueDate { get; set; }
 
     public TaskStatus Status { get; set; } = TaskStatus.NotStarted;
+
+    public UserWebApiModel? Assignee { get; set; }
 
     public int? AssigneeId { get; set; }
 

@@ -24,12 +24,26 @@ public class TaskRepository : ITaskRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public async Task<List<TaskEntity>> GetAssignedTasksAsync(int userId)
+    {
+        return await this.db.Tasks
+            .Include(t => t.TodoList)
+                .ThenInclude(l => l.Owner)
+            .Include(t => t.TodoList)
+                .ThenInclude(l => l.AccessList)
+            .Include(t => t.Assignee)
+            .AsNoTracking()
+            .Where(t => t.AssigneeId == userId)
+            .ToListAsync();
+    }
+
     public async Task<TaskEntity> AddTaskAsync(int todoListId, TaskEntity task)
     {
         ArgumentNullException.ThrowIfNull(task);
 
         _ = await this.db.TodoLists
             .Include(l => l.Tasks)
+
             .FirstOrDefaultAsync(l => l.Id == todoListId) ?? throw new KeyNotFoundException($"TodoList {todoListId} not found");
 
         task.TodoListId = todoListId;

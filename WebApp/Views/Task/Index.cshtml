@@ -1,0 +1,113 @@
+@using System.Security.Claims
+@using WebApp.Models.Tasks
+@inject IHttpContextAccessor HttpContextAccessor
+@model IEnumerable<TaskWebApiModel>
+
+@{
+    ViewData["Title"] = "Assigned Tasks";
+    var user = HttpContextAccessor.HttpContext?.User;
+    var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+    var now = DateTime.UtcNow.ToLocalTime();
+}
+
+<h2 class="mb-4">Assigned Tasks</h2>
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    @foreach (var task in Model)
+    {
+        bool isOverdue = task.DueDate.ToLocalTime() < now && task.Status != Core.Enums.TaskStatus.Completed;
+
+        <div class="col">
+            <div class="card h-100 rounded-3 shadow-sm border-2">
+
+                <div class="card-body">
+                    <h5 class="card-title mb-2 fw-semibold">
+                        @task.Title
+                    </h5>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <form asp-action="ChangeStatus" asp-route-id="@task.Id" method="post" class="d-inline-block position-relative">
+                            <!-- Текущий статус -->
+                            <button type="button"
+                                    class="badge @GetStatusBadgeClass(task.Status)"
+                                    onclick="this.nextElementSibling.classList.toggle('d-none')"
+                                    style="cursor:pointer;">
+                                @task.Status
+                            </button>
+
+                            <!-- Список других статусов -->
+                            <div class="position-absolute mt-1 d-none" style="z-index:1000;">
+                                @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
+                                {
+                                    @if (s != task.Status)
+                                    {
+                                        <button type="submit" name="newStatus" value="@s"
+                                                class="badge @GetStatusBadgeClass(s) d-block mb-1"
+                                                style="width:100%; text-align:left; border:none; cursor:pointer;">
+                                            @s
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </form>
+
+                        <small class="text-muted ms-2">
+                            Due @task.DueDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                        </small>
+                    </div>
+
+
+
+                    <p class="card-text text-muted">@task.Description</p>
+
+                    @if (isOverdue)
+                    {
+                        <div class="alert alert-danger py-1 px-2 mt-2 mb-0 small">
+                            ⚠️ This task is overdue!
+                        </div>
+                    }
+
+                    <hr class="my-2" />
+
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Created @task.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
+                        @if (!string.IsNullOrEmpty(task.AssigneeName))
+                        {
+                            <span>👤 @task.AssigneeName</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center">
+
+
+                    <form asp-action="ChangeStatus" asp-route-id="@task.Id" method="post" class="d-inline">
+                        <select name="newStatus" class="form-select form-select-sm d-inline-block w-auto"
+                                onchange="this.form.submit()">
+                            @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
+                            {
+                                var selected = task.Status == s ? "selected" : null;
+                                <option value="@s" selected="@(selected)">
+                                    @s
+                                </option>
+                            }
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    private string GetStatusBadgeClass(Core.Enums.TaskStatus status)
+    {
+        return status switch
+        {
+            Core.Enums.TaskStatus.NotStarted => "bg-secondary",
+            Core.Enums.TaskStatus.InProgress => "bg-warning text-dark",
+            Core.Enums.TaskStatus.Completed => "bg-success",
+            _ => "bg-dark"
+        };
+    }
+}

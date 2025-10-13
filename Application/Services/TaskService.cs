@@ -1,8 +1,8 @@
+using Application.Interfaces;
+using Contracts.Tasks;
+using Contracts.Users;
 using Core.Entities.Task;
 using Core.Interfaces;
-using Contracts.Tasks;
-using Application.Interfaces;
-using Contracts.Users;
 
 namespace Application.Services;
 
@@ -32,7 +32,10 @@ public class TaskService : ITaskService
             Title = dto.Title,
             Description = dto.Description,
             DueDate = dto.DueDate,
-            TodoListId = todoListId
+            TodoListId = todoListId,
+            AssigneeId = userId,
+            CreatedAt = DateTime.UtcNow,
+            Status = Core.Enums.TaskStatus.NotStarted,
         };
 
         var added = await this.repository.AddTaskAsync(todoListId, entity);
@@ -43,6 +46,13 @@ public class TaskService : ITaskService
     {
         var entity = await this.repository.GetTaskByIdAsync(id);
         return entity == null ? null : MapToDto(entity);
+    }
+
+    public async Task<List<TaskDto>> GetAssignedTasksAsync(int userId)
+    {
+        var entities = await this.repository.GetAssignedTasksAsync(userId);
+        return entities?.Select(l => MapToDto(l))
+                   .ToList() ?? new List<TaskDto>();
     }
 
     public async Task<TaskDto?> UpdateTaskAsync(int id, TaskEditDto dto, int userId)
@@ -99,7 +109,6 @@ public class TaskService : ITaskService
             DueDate = entity.DueDate,
             Status = entity.Status,
             TodoListId = entity.TodoListId,
-            AssigneeId = entity.AssigneeId,
             Assignee = entity.Assignee == null
                 ? null
                 : new UserDto

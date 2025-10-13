@@ -48,7 +48,7 @@ public class TodoListController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(TodoListWebApiModel model)
+    public async Task<IActionResult> Create(TodoListCreateModel model)
     {
         if (!this.ModelState.IsValid)
         {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Core.Entities.Task;
 using Core.Entities.TodoList;
 using Core.Enums;
@@ -104,6 +105,8 @@ public class TodoListRepository : ITodoListRepository
         {
             return false;
         }
+
+        this.db.TodoListAccesses.RemoveRange(entity.AccessList);
 
         _ = this.db.TodoLists.Remove(entity);
         _ = await this.db.SaveChangesAsync();

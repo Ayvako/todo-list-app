@@ -6,8 +6,6 @@ namespace Core.Entities.TodoList;
 
 public class TodoListAccessEntity
 {
-    public int Id { get; set; }
-
     public int UserId { get; set; }
 
     [ForeignKey("UserId")]

@@ -11,4 +11,6 @@ public interface ITaskRepository
     Task<TaskEntity?> GetTaskByIdAsync(int id);
 
     Task<TaskEntity?> UpdateTaskAsync(int id, TaskEntity updatedTask);
+
+    Task<List<TaskEntity>> GetAssignedTasksAsync(int userId);
 }
