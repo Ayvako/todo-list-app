@@ -21,6 +21,10 @@ public class TodoListRepository : ITodoListRepository
         return await this.db.TodoLists
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
+            .Include(l => l.AccessList)
+                .ThenInclude(a => a.User)
+            .Include(l => l.Owner)
+
             .AsNoTracking()
             .ToListAsync();
     }
@@ -34,6 +38,8 @@ public class TodoListRepository : ITodoListRepository
                 .ThenInclude(t => t.Assignee)
             .Include(l => l.AccessList)
                 .ThenInclude(a => a.User)
+            .Include(l => l.Owner)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -44,6 +50,7 @@ public class TodoListRepository : ITodoListRepository
                 .ThenInclude(t => t.Assignee)
             .Include(l => l.AccessList)
                 .ThenInclude(a => a.User)
+            .Include(l => l.Owner)
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == id);
     }
@@ -61,6 +68,7 @@ public class TodoListRepository : ITodoListRepository
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
             .Include(l => l.AccessList)
+            .Include(l => l.Owner)
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == todoListId);
 
@@ -74,6 +82,7 @@ public class TodoListRepository : ITodoListRepository
         var entity = await this.db.TodoLists
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
+            .Include(l => l.Owner)
             .FirstOrDefaultAsync(l => l.Id == id);
 
         if (entity == null)

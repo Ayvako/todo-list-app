@@ -17,4 +17,6 @@ public class TodoListWebApiModel
     public bool IsShared { get; set; }
 
     public List<TodoListAccessWebApiModel> AccessList { get; set; } = new();
+
+    public string OwnerName { get; set; } = string.Empty;
 }

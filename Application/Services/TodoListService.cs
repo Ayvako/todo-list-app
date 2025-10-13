@@ -187,7 +187,8 @@ public class TodoListService : ITodoListService
                 UserName = a.User.UserName,
                 Role = a.Role.ToString()
             })
-            .ToList() ?? new()
+            .ToList() ?? new(),
+            OwnerName = entity.Owner.UserName,
         };
     }
 

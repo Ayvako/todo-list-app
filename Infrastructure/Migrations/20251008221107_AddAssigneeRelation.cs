@@ -10,6 +10,8 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            ArgumentNullException.ThrowIfNull(migrationBuilder);
+
             _ = migrationBuilder.DropForeignKey(
                 name: "FK_Tasks_Users_UserEntityId",
                 table: "Tasks");
@@ -50,6 +52,8 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            ArgumentNullException.ThrowIfNull(migrationBuilder);
+
             _ = migrationBuilder.DropForeignKey(
                 name: "FK_Tasks_Users_AssigneeId",
                 table: "Tasks");

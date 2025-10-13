@@ -73,6 +73,7 @@ internal static class Program
                     {
                         context.Token = token;
                     }
+
                     return Task.CompletedTask;
                 },
             };

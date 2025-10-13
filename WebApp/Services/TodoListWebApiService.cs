@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using Core.Enums;
 using WebApp.Interfaces;
 using WebApp.Models.TodoLists;
 
@@ -95,6 +94,7 @@ public class TodoListWebApiService : ITodoListWebApiService
 
     public async Task<bool> ShareAsync(ShareModel model)
     {
+        ArgumentNullException.ThrowIfNull(model);
         this.AttachToken();
 
         var response = await this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/share", model);
@@ -103,6 +103,8 @@ public class TodoListWebApiService : ITodoListWebApiService
 
     public async Task<bool> RevokeAsync(RevokeModel model)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         this.AttachToken();
 
         var response = await this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/revoke", model);

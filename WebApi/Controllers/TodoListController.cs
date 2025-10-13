@@ -1,7 +1,6 @@
-using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Claims;
 using Application.Interfaces;
-using Application.Services;
 using Contracts.TodoLists;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -117,6 +116,8 @@ public class TodoListController : ControllerBase
     {
         var userId = this.GetUserId();
 
+        ArgumentNullException.ThrowIfNull(model);
+
         var targetUser = await this.userService.GetUserByNameAsync(model.UserName);
         if (targetUser == null)
         {
@@ -145,6 +146,8 @@ public class TodoListController : ControllerBase
     [HttpPost("{id}/revoke")]
     public async Task<IActionResult> Revoke(int id, [FromBody] RevokeDto model)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         var userId = this.GetUserId();
         var user = await this.userService.GetUserByNameAsync(model.UserName);
         if (user == null)
@@ -176,6 +179,6 @@ public class TodoListController : ControllerBase
             throw new UnauthorizedAccessException("User not authenticated");
         }
 
-        return int.Parse(id);
+        return int.Parse(id, CultureInfo.InvariantCulture);
     }
 }
