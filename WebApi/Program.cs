@@ -24,6 +24,7 @@ internal static class Program
 
         _ = builder.Services.AddScoped<ITodoListRepository, TodoListRepository>();
         _ = builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+        _ = builder.Services.AddScoped<IUserRepository, UserRepository>();
 
         _ = builder.Services.AddScoped<ITodoListService, TodoListService>();
         _ = builder.Services.AddScoped<ITaskService, TaskService>();

@@ -1,11 +1,10 @@
 using System.Globalization;
 using System.Security.Claims;
 using Application.Interfaces;
+using Contracts.Tasks;
 using Contracts.TodoLists;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApp.Models.Tasks;
-using WebApp.Models.TodoLists;
 
 namespace WebApi.Controllers;
 
@@ -24,7 +23,7 @@ public class TodoListController : ControllerBase
     }
 
     [HttpGet("all")]
-    public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetAll()
+    public async Task<ActionResult<IEnumerable<TodoListDto>>> GetAll()
     {
         var userId = this.GetUserId();
         var lists = await this.service.GetAllAsync(userId);
@@ -32,7 +31,7 @@ public class TodoListController : ControllerBase
     }
 
     [HttpGet("user")]
-    public async Task<ActionResult<IEnumerable<TodoListWebApiModel>>> GetUserLists()
+    public async Task<ActionResult<IEnumerable<TodoListDto>>> GetUserLists()
     {
         var userId = this.GetUserId();
         var lists = await this.service.GetByUserAsync(userId);
@@ -40,7 +39,7 @@ public class TodoListController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TodoListWebApiModel>> GetById(int id)
+    public async Task<ActionResult<TodoListDto>> GetById(int id)
     {
         var userId = this.GetUserId();
 
@@ -56,7 +55,7 @@ public class TodoListController : ControllerBase
     }
 
     [HttpGet("{id}/tasks")]
-    public async Task<ActionResult<IEnumerable<TaskWebApiModel>>> GetTasks(int id)
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasks(int id)
     {
         var userId = this.GetUserId();
 
@@ -72,22 +71,41 @@ public class TodoListController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<TodoListWebApiModel>> Add([FromBody] TodoListCreateDto model)
+    public async Task<ActionResult<TodoListCreateDto>> Add([FromBody] TodoListCreateDto model)
     {
         var userId = this.GetUserId();
         var created = await this.service.AddAsync(model, userId);
-        return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, created);
+
+        var responce = new TodoListCreateDto()
+        {
+            Description = created.Description,
+            Title = created.Title,
+        };
+
+        return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, responce);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TodoListWebApiModel>> Update(int id, [FromBody] TodoListUpdateDto model)
+    public async Task<ActionResult<TodoListUpdateDto>> Update(int id, [FromBody] TodoListUpdateDto model)
     {
         var userId = this.GetUserId();
 
         try
         {
             var updated = await this.service.UpdateAsync(id, model, userId);
-            return updated == null ? this.NotFound() : this.Ok(updated);
+
+            if (updated == null)
+            {
+                return this.NotFound();
+            }
+
+            var responce = new TodoListCreateDto()
+            {
+                Description = updated.Description,
+                Title = updated.Title,
+            };
+
+            return this.Ok(responce);
         }
         catch (UnauthorizedAccessException)
         {

@@ -6,9 +6,6 @@ namespace Contracts.Tasks;
 public class TaskEditDto
 {
     [Required]
-    public int Id { get; set; }
-
-    [Required]
     [StringLength(100, MinimumLength = 3)]
     public string Title { get; set; } = string.Empty;
 
@@ -21,8 +18,5 @@ public class TaskEditDto
     [Required]
     public TaskStatus Status { get; set; }
 
-    [Required]
-    public int TodoListId { get; set; }
-
-    public int? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
 }

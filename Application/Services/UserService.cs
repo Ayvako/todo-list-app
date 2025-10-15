@@ -1,90 +1,47 @@
 using Application.Interfaces;
 using Contracts.Users;
 using Core.Entities.TodoUser;
-using Core.Enums;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
+using Core.Interfaces;
 
 namespace Application.Services;
 
 public class UserService : IUserService
 {
-    private readonly TodoListDbContext dbContext;
+    private readonly IUserRepository userRepository;
 
-    public UserService(TodoListDbContext dbContext)
+    public UserService(IUserRepository userRepository)
     {
-        this.dbContext = dbContext;
+        this.userRepository = userRepository;
     }
 
     public async Task<UserDto?> GetByIdAsync(int id)
     {
-        var user = await this.dbContext.Users.FindAsync(id);
+        var user = await this.userRepository.GetByIdAsync(id);
         return user == null ? null : MapToDto(user);
     }
 
     public async Task<IEnumerable<UserDto>> GetAllAsync()
     {
-        return await this.dbContext.Users
-            .Select(u => MapToDto(u))
-            .ToListAsync();
+        var entities = await this.userRepository.GetAllAsync();
+        return entities.Select(u => MapToDto(u)).ToList() ?? new List<UserDto>();
     }
 
     public async Task<UserDto?> GetUserByNameAsync(string username)
     {
-        var user = await this.dbContext.Users.FirstOrDefaultAsync(u => u.UserName == username);
-
+        var user = await this.userRepository.GetUserByNameAsync(username);
         return user == null ? null : MapToDto(user);
     }
 
     public async Task<UserDto?> RegisterAsync(string username, string email, string password)
     {
-        if (await this.dbContext.Users.AnyAsync(u => u.Email == email))
-        {
-            throw new InvalidOperationException("User with this email already exists.");
-        }
-
-        var entity = new UserEntity
-        {
-            UserName = username,
-            Email = email,
-            PasswordHash = HashPassword(password),
-            Role = UserRole.Authorized
-        };
-
-        _ = this.dbContext.Users.Add(entity);
-        _ = await this.dbContext.SaveChangesAsync();
-
-        return MapToDto(entity);
+        var user = await this.userRepository.RegisterAsync(username, email, password);
+        return user == null ? null : MapToDto(user);
     }
 
     public async Task<UserDto?> LoginAsync(string email, string password)
     {
-        var hash = HashPassword(password);
-
-        var user = await this.dbContext.Users
-            .FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == hash);
-
+        var user = await this.userRepository.LoginAsync(email, password);
         return user == null ? null : MapToDto(user);
-    }
-
-    public async Task<bool> HasAccessToListAsync(int userId, int listId, bool requireEditRights = false)
-    {
-        var access = await this.dbContext.TodoListAccesses
-            .FirstOrDefaultAsync(a => a.UserId == userId && a.TodoListId == listId);
-
-        if (access == null)
-        {
-            return false;
-        }
-
-        if (requireEditRights)
-        {
-            return access.Role is TodoListAccessRole.Editor or TodoListAccessRole.Owner;
-        }
-
-        return true;
     }
 
     private static UserDto MapToDto(UserEntity entity) => new()
@@ -94,11 +51,4 @@ public class UserService : IUserService
         Email = entity.Email,
         Role = entity.Role
     };
-
-    private static string HashPassword(string password)
-    {
-        var bytes = Encoding.UTF8.GetBytes(password);
-        var hash = SHA256.HashData(bytes);
-        return Convert.ToBase64String(hash);
-    }
 }

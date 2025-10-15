@@ -4,7 +4,6 @@ using Application.Interfaces;
 using Contracts.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApp.Models.Tasks;
 
 namespace WebApi.Controllers;
 
@@ -21,21 +20,30 @@ public class TaskController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TaskWebApiModel>> GetTaskById(int id)
+    public async Task<ActionResult<TaskDto>> GetTaskById(int id)
     {
-        var task = await this.taskService.GetTaskByIdAsync(id);
+        TaskDto? task = await this.taskService.GetTaskByIdAsync(id);
+
         return task == null ? this.NotFound() : this.Ok(task);
     }
 
     [HttpPost("{todoListId}/tasks")]
-    public async Task<ActionResult<TaskWebApiModel>> AddTask(int todoListId, [FromBody] TaskCreateDto model)
+    public async Task<ActionResult<TaskCreateDto>> AddTask(int todoListId, [FromBody] TaskCreateDto model)
     {
         var userId = this.GetUserId();
 
         try
         {
             var task = await this.taskService.AddTaskAsync(todoListId, model, userId);
-            return this.CreatedAtAction(nameof(this.GetTaskById), new { id = task.Id }, task);
+
+            var responce = new TaskCreateDto()
+            {
+                Description = task.Description,
+                DueDate = task.DueDate,
+                Title = task.Title,
+            };
+
+            return this.CreatedAtAction(nameof(this.GetTaskById), new { id = task.Id }, responce);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -44,14 +52,34 @@ public class TaskController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TaskWebApiModel>> EditTask(int id, [FromBody] TaskEditDto model)
+    public async Task<ActionResult<TaskEditDto>> EditTask(int id, [FromBody] TaskEditDto model)
     {
         var userId = this.GetUserId();
 
         try
         {
             var updated = await this.taskService.UpdateTaskAsync(id, model, userId);
-            return updated == null ? this.NotFound() : this.Ok(updated);
+
+            if (model == null)
+            {
+                return this.BadRequest("Model is null");
+            }
+
+            if (updated == null)
+            {
+                return this.NotFound();
+            }
+
+            var responce = new TaskEditDto()
+            {
+                Description = updated.Description,
+                DueDate = updated.DueDate,
+                Title = updated.Title,
+                Status = updated.Status,
+                AssigneeName = model.AssigneeName,
+            };
+
+            return this.Ok(responce);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -76,7 +104,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpGet("AssignedTasks")]
-    public async Task<ActionResult<IEnumerable<TaskWebApiModel>>> GetAssignedTasksAsync()
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAssignedTasksAsync()
     {
         var userId = this.GetUserId();
         var lists = await this.taskService.GetAssignedTasksAsync(userId);

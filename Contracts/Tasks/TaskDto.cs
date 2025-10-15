@@ -17,8 +17,6 @@ public class TaskDto
 
     public TaskStatus Status { get; set; } = TaskStatus.NotStarted;
 
-    public int? AssigneeId { get; set; }
-
     public UserDto? Assignee { get; set; }
 
     public int TodoListId { get; set; }

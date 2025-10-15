@@ -5,9 +5,6 @@ namespace Contracts.Tasks;
 public class TaskCreateDto
 {
     [Required]
-    public int TodoListId { get; set; }
-
-    [Required]
     [StringLength(100, MinimumLength = 3)]
     public string Title { get; set; } = string.Empty;
 

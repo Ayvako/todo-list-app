@@ -12,7 +12,5 @@ public interface IUserService
 
     Task<UserDto?> LoginAsync(string email, string password);
 
-    Task<bool> HasAccessToListAsync(int userId, int listId, bool requireEditRights = false);
-
     Task<UserDto?> GetUserByNameAsync(string username);
 }

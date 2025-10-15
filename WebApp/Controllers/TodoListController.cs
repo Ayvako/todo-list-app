@@ -50,11 +50,6 @@ public class TodoListController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(TodoListCreateModel model)
     {
-        if (!this.ModelState.IsValid)
-        {
-            return this.View(model);
-        }
-
         var created = await this.service.AddAsync(model);
 
         if (created == null)
@@ -85,7 +80,7 @@ public class TodoListController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, TodoListWebApiModel model)
+    public async Task<IActionResult> Edit(int id, TodoListUpdateWebApiModel model)
     {
         if (!this.ModelState.IsValid)
         {

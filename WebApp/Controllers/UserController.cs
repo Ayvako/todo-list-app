@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
-using WebApp.Models;
 using WebApp.Models.Users;
 
 namespace WebApp.Controllers;
@@ -64,15 +63,7 @@ public class UserController : Controller
             return this.View(model);
         }
 
-        this.Response.Cookies.Append("jwt", response.Token, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddHours(1),
-        });
-
-        return this.RedirectToAction("Index", "TodoList");
+        return this.RedirectToAction("Login", "User");
     }
 
     [HttpPost]

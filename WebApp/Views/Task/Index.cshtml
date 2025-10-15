@@ -27,7 +27,6 @@
 
                     <div class="d-flex align-items-center mb-3">
                         <form asp-action="ChangeStatus" asp-route-id="@task.Id" method="post" class="d-inline-block position-relative">
-                            <!-- Текущий статус -->
                             <button type="button"
                                     class="badge @GetStatusBadgeClass(task.Status)"
                                     onclick="this.nextElementSibling.classList.toggle('d-none')"
@@ -35,7 +34,6 @@
                                 @task.Status
                             </button>
 
-                            <!-- Список других статусов -->
                             <div class="position-absolute mt-1 d-none" style="z-index:1000;">
                                 @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
                                 {

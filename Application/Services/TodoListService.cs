@@ -79,6 +79,7 @@ public class TodoListService : ITodoListService
         };
 
         var added = await this.repository.AddAsync(entity);
+
         return MapToWebApiModel(added, userId);
     }
 
@@ -181,13 +182,15 @@ public class TodoListService : ITodoListService
             Tasks = entity.Tasks?.Select(MapTaskToWebApiModel).ToList() ?? new List<TaskDto>(),
             CanEdit = canEdit,
             IsShared = isShared,
-            AccessList = entity.AccessList?
-            .Select(a => new TodoListAccessDto
-            {
-                UserName = a.User.UserName,
-                Role = a.Role.ToString()
-            })
-            .ToList() ?? new(),
+            AccessList = entity.AccessList != null && entity.AccessList.Count != 0
+            ? entity.AccessList
+                .Select(a => new TodoListAccessDto
+                {
+                    UserName = a.User?.UserName ?? "Unknown",
+                    Role = a.Role.ToString()
+                })
+                .ToList()
+            : new List<TodoListAccessDto>(),
             OwnerName = entity.Owner?.UserName ?? "Unknown"
         };
     }

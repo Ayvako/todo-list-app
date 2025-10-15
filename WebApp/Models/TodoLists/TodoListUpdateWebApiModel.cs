@@ -1,13 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Contracts.TodoLists;
+namespace WebApp.Models.TodoLists;
 
-public class TodoListUpdateDto
+public class TodoListUpdateWebApiModel
 {
-    [Required]
-    [StringLength(100, MinimumLength = 3)]
+    [MinLength(3, ErrorMessage = "Title must be at least 3 characters long")]
     public string Title { get; set; } = string.Empty;
 
-    [StringLength(500)]
     public string? Description { get; set; } = string.Empty;
 }

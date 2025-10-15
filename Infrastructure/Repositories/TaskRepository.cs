@@ -83,6 +83,7 @@ public class TaskRepository : ITaskRepository
         entity.DueDate = updatedTask.DueDate;
         entity.Status = updatedTask.Status;
         entity.AssigneeId = updatedTask.AssigneeId;
+        entity.Assignee = updatedTask.Assignee;
 
         _ = await this.db.SaveChangesAsync();
         return entity;

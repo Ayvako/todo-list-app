@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
-using WebApp.Models.Users;
 
 namespace WebApp.Services;
 
@@ -34,7 +33,7 @@ public class TaskWebApiService : ITaskWebApiService
         var result = await this.apiClientService.TryRequestAsync<IEnumerable<TaskWebApiModel?>>(
             () => this.httpClient.GetAsync($"api/Task/AssignedTasks"));
 
-        return result.Data;
+        return result.Data ?? Enumerable.Empty<TaskWebApiModel>();
     }
 
     public async Task<TaskWebApiModel?> AddTaskAsync(int todoListId, TaskCreateModel model)
@@ -65,33 +64,8 @@ public class TaskWebApiService : ITaskWebApiService
             return null;
         }
 
-        int? assigneeId = null;
-
-        if (!string.IsNullOrWhiteSpace(model.AssigneeName))
-        {
-            var userResult = await this.apiClientService.TryRequestAsync<UserWebApiModel>(
-                () => this.httpClient.GetAsync($"api/User/by-name/{model.AssigneeName}"));
-
-            if (userResult.Success && userResult.Data != null)
-            {
-                assigneeId = userResult.Data.Id;
-            }
-            else
-            {
-                Console.WriteLine($"Unable to find user {model.AssigneeName}: {userResult.ErrorMessage}");
-            }
-        }
-
         var taskResult = await this.apiClientService.TryRequestAsync<TaskWebApiModel>(
-            () => this.httpClient.PutAsJsonAsync($"api/Task/{id}", new TaskWebApiModel
-            {
-                Title = model.Title,
-                Description = model.Description,
-                DueDate = model.DueDate,
-                Status = model.Status,
-                AssigneeName = model.AssigneeName,
-                AssigneeId = assigneeId,
-            }));
+            () => this.httpClient.PutAsJsonAsync($"api/Task/{id}", model));
 
         if (!taskResult.Success)
         {

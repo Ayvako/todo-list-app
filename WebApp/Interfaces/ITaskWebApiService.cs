@@ -1,4 +1,5 @@
 using WebApp.Models.Tasks;
+using WebApp.Models.Users;
 
 namespace WebApp.Interfaces;
 

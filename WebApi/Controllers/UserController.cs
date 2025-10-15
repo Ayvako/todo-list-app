@@ -1,7 +1,9 @@
+using System.Globalization;
+using System.Security.Claims;
 using Application.Interfaces;
 using Contracts.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApp.Models.Users;
 
 namespace WebApi.Controllers;
 
@@ -18,26 +20,8 @@ public class UserController : ControllerBase
         this.jwtService = jwtService;
     }
 
-    [HttpGet("by-name/{username}")]
-    public async Task<ActionResult<UserWebApiModel?>> GetByName(string username)
-    {
-        var user = await this.userService.GetUserByNameAsync(username);
-        if (user == null)
-        {
-            return this.NotFound();
-        }
-
-        return new UserWebApiModel
-        {
-            Id = user.Id,
-            UserName = user.UserName,
-            Email = user.Email,
-            Role = user.Role,
-        };
-    }
-
     [HttpPost("register")]
-    public async Task<ActionResult<UserLoginResponseDto>> Register([FromBody] UserRegisterDto model)
+    public async Task<ActionResult<UserRegisterResponseDto>> Register([FromBody] UserRegisterDto model)
     {
         if (!this.ModelState.IsValid)
         {
@@ -49,16 +33,46 @@ public class UserController : ControllerBase
         try
         {
             var user = await this.userService.RegisterAsync(model.UserName, model.Email, model.Password);
-            ArgumentNullException.ThrowIfNull(user);
+            if (user == null)
+            {
+                return this.BadRequest("Failed to register user");
+            }
 
-            var token = this.jwtService.GenerateToken(user);
+            var response = new UserRegisterResponseDto
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+            };
 
-            return this.Ok(new { user, token });
+            return this.CreatedAtAction(nameof(this.GetUserById), new { id = user.Id }, response);
         }
         catch (InvalidOperationException ex)
         {
             return this.Conflict(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<UserResponseDto>> GetUserById()
+    {
+        var userId = this.GetUserId();
+
+        var user = await this.userService.GetByIdAsync(userId);
+        if (user == null)
+        {
+            return this.NotFound();
+        }
+
+        var response = new UserResponseDto
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+        };
+
+        return this.Ok(response);
     }
 
     [HttpPost("login")]
@@ -81,10 +95,27 @@ public class UserController : ControllerBase
 
         var response = new UserLoginResponseDto
         {
+            User = new UserResponseDto()
+            {
+                Email = user.Email,
+                Id = user.Id,
+                UserName = user.UserName,
+            },
             Token = token,
-            User = user,
         };
 
         return this.Ok(response);
+    }
+
+    private int GetUserId()
+    {
+        var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(id))
+        {
+            throw new UnauthorizedAccessException("User not authenticated");
+        }
+
+        return int.Parse(id, CultureInfo.InvariantCulture);
     }
 }

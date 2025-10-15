@@ -97,7 +97,7 @@ public class TaskController : Controller
             Description = task.Description,
             DueDate = task.DueDate,
             Status = task.Status,
-            AssigneeName = task.Assignee.UserName,
+            AssigneeName = task.Assignee?.UserName,
         };
 
         return this.View(model);

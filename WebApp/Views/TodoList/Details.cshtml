@@ -37,15 +37,15 @@
                             @task.Status
                         </span>
                     </td>
-                    <td>@task.Assignee.UserName</td>
+                    <td>@task?.Assignee?.UserName</td>
 
                     @if (canEdit)
                     {
                         <td>
-                            <a asp-controller="Task" asp-action="Edit" asp-route-id="@task.Id"
+                            <a asp-controller="Task" asp-action="Edit" asp-route-id="@task?.Id"
                                class="btn btn-sm btn-outline-primary me-2">✎ Edit</a>
 
-                            <form asp-controller="Task" asp-action="Delete" asp-route-id="@task.Id"
+                            <form asp-controller="Task" asp-action="Delete" asp-route-id="@task?.Id"
                                   method="post" class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-outline-danger"
                                         onclick="return confirm('Delete this task?');">
