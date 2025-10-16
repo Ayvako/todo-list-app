@@ -26,7 +26,18 @@ public class TaskRepository : ITaskRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
-    public async Task<List<TaskEntity>> GetAssignedTasksAsync(int userId)
+    public async Task<List<TaskEntity>> GetAssignedTasksAsync(int userId, TaskStatus? status = TaskStatus.InProgress)
+    {
+        var tasks = await this.GetAllAsync(userId);
+        if (status.HasValue)
+        {
+            tasks = tasks.Where(t => t.Status == status.Value).ToList();
+        }
+
+        return tasks.Where(t => t.Status == status.Value).ToList();
+    }
+
+    public async Task<List<TaskEntity>> GetAllAsync(int userId)
     {
         return await this.db.Tasks
             .Include(t => t.TodoList)
@@ -35,7 +46,11 @@ public class TaskRepository : ITaskRepository
                 .ThenInclude(l => l.AccessList)
             .Include(t => t.Assignee)
             .AsNoTracking()
-            .Where(t => t.AssigneeId == userId)
+            .Where(t =>
+                t.TodoList.OwnerId == userId ||
+                t.TodoList.AccessList.Any(a => a.UserId == userId) ||
+                t.AssigneeId == userId
+            )
             .ToListAsync();
     }
 

@@ -40,7 +40,7 @@ public class UserController : Controller
             Expires = DateTimeOffset.UtcNow.AddHours(1),
         });
 
-        return this.RedirectToAction("Index", "TodoList");
+        return this.RedirectToAction("Index", "Home");
     }
 
     [HttpGet]

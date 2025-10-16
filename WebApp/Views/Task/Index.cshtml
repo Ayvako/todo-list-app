@@ -10,7 +10,24 @@
     var now = DateTime.UtcNow.ToLocalTime();
 }
 
-<h2 class="mb-4">Assigned Tasks</h2>
+<h2 class="mb-2">Assigned Tasks</h2>
+
+@if (ViewBag.SelectedStatus != null)
+{
+    <span class="badge @GetStatusBadgeClass((Core.Enums.TaskStatus)ViewBag.SelectedStatus)">
+        Current filter: @ViewBag.SelectedStatus
+    </span>
+}
+
+<form method="get" asp-action="Index" class="my-3">
+    <label for="status" class="form-label fw-semibold me-2">Filter by status:</label>
+    <select name="status" id="status" class="form-select w-auto d-inline" onchange="this.form.submit()">
+        @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
+        {
+            <option value="@s" selected="@(s == (ViewBag.SelectedStatus ?? Core.Enums.TaskStatus.InProgress))">@s</option>
+        }
+    </select>
+</form>
 
 <div class="row row-cols-1 row-cols-md-2 g-4">
     @foreach (var task in Model)

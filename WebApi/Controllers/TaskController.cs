@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Contracts.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskStatus = Core.Enums.TaskStatus;
 
 namespace WebApi.Controllers;
 
@@ -17,6 +18,14 @@ public class TaskController : ControllerBase
     public TaskController(ITaskService taskService)
     {
         this.taskService = taskService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAll()
+    {
+        var userId = this.GetUserId();
+        var lists = await this.taskService.GetAllAsync(userId);
+        return this.Ok(lists);
     }
 
     [HttpGet("{id}")]
@@ -119,11 +128,11 @@ public class TaskController : ControllerBase
         }
     }
 
-    [HttpGet("AssignedTasks")]
-    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAssignedTasksAsync()
+    [HttpGet("assigned")]
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAssignedTasksAsync([FromQuery] TaskStatus? status = TaskStatus.InProgress)
     {
         var userId = this.GetUserId();
-        var lists = await this.taskService.GetAssignedTasksAsync(userId);
+        var lists = await this.taskService.GetAssignedTasksAsync(userId, status);
         return this.Ok(lists);
     }
 

@@ -16,10 +16,23 @@ public class TaskController : Controller
         this.taskService = taskService;
     }
 
+    //[HttpGet]
+    //public async Task<IActionResult> Index()
+    //{
+    //    var lists = await this.taskService.GetAllAsync();
+    //    return this.View(lists);
+    //}
+
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(TaskStatus? status = TaskStatus.InProgress)
     {
-        var lists = await this.taskService.GetAssignedTasksAsync();
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest("Invalid request");
+        }
+
+        var lists = await this.taskService.GetAssignedTasksAsync(status);
+        ViewBag.SelectedStatus = status;
         return this.View(lists);
     }
 

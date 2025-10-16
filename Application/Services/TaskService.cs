@@ -1,9 +1,9 @@
-using System.Threading.Tasks;
 using Application.Interfaces;
 using Contracts.Tasks;
 using Contracts.Users;
 using Core.Entities.Task;
 using Core.Interfaces;
+using TaskStatus = Core.Enums.TaskStatus;
 
 namespace Application.Services;
 
@@ -53,9 +53,16 @@ public class TaskService : ITaskService
         return entity == null ? null : MapToDto(entity);
     }
 
-    public async Task<List<TaskDto>> GetAssignedTasksAsync(int userId)
+    public async Task<List<TaskDto>> GetAllAsync(int userId)
     {
-        var entities = await this.repository.GetAssignedTasksAsync(userId);
+        var entities = await this.repository.GetAllAsync(userId);
+        return entities?.Select(l => MapToDto(l))
+                   .ToList() ?? new List<TaskDto>();
+    }
+
+    public async Task<List<TaskDto>> GetAssignedTasksAsync(int userId, TaskStatus? status = TaskStatus.InProgress)
+    {
+        var entities = await this.repository.GetAssignedTasksAsync(userId, status);
         return entities?.Select(l => MapToDto(l))
                    .ToList() ?? new List<TaskDto>();
     }
@@ -106,6 +113,25 @@ public class TaskService : ITaskService
         return await this.repository.DeleteTaskAsync(id);
     }
 
+    public async Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto)
+    {
+        var existing = await this.repository.GetTaskByIdAsync(id);
+        if (existing == null)
+        {
+            return false;
+        }
+
+        var isAssignee = existing.AssigneeId == userId;
+        var canEditList = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
+
+        if (!canEditList && !isAssignee)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to delete this task.");
+        }
+
+        return await this.repository.UpdateStatusAsync(id, dto.NewStatus);
+    }
+
     private static TaskDto MapToDto(TaskEntity entity)
     {
         return new TaskDto
@@ -127,24 +153,5 @@ public class TaskService : ITaskService
                     UserName = entity.Assignee.UserName
                 }
         };
-    }
-
-    public async Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto)
-    {
-        var existing = await this.repository.GetTaskByIdAsync(id);
-        if (existing == null)
-        {
-            return false;
-        }
-
-        var isAssignee = existing.AssigneeId == userId;
-        var canEditList = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
-
-        if (!canEditList && !isAssignee)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to delete this task.");
-        }
-
-        return await this.repository.UpdateStatusAsync(id, dto.NewStatus);
     }
 }

@@ -13,7 +13,9 @@ public interface ITaskRepository
 
     Task<TaskEntity?> UpdateTaskAsync(TaskEntity updatedTask);
 
-    Task<List<TaskEntity>> GetAssignedTasksAsync(int userId);
+    Task<List<TaskEntity>> GetAssignedTasksAsync(int userId, TaskStatus? status = TaskStatus.InProgress);
+
+    Task<List<TaskEntity>> GetAllAsync(int userId);
 
     Task<bool> UpdateStatusAsync(int id, TaskStatus newStatus);
 }

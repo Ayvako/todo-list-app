@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
+using TaskStatus = Core.Enums.TaskStatus;
 
 namespace WebApp.Services;
 
@@ -18,6 +18,16 @@ public class TaskWebApiService : ITaskWebApiService
         this.apiClientService = apiClientService;
     }
 
+    public async Task<IEnumerable<TaskWebApiModel?>> GetAllAsync()
+    {
+        this.AttachToken();
+
+        var result = await this.apiClientService.TryRequestAsync<IEnumerable<TaskWebApiModel?>>(
+            () => this.httpClient.GetAsync($"api/Task"));
+
+        return result.Data ?? Enumerable.Empty<TaskWebApiModel>();
+    }
+
     public async Task<TaskWebApiModel?> GetTaskByIdAsync(int id)
     {
         this.AttachToken();
@@ -28,11 +38,12 @@ public class TaskWebApiService : ITaskWebApiService
         return result.Data;
     }
 
-    public async Task<IEnumerable<TaskWebApiModel?>> GetAssignedTasksAsync()
+    public async Task<IEnumerable<TaskWebApiModel?>> GetAssignedTasksAsync(TaskStatus? status = TaskStatus.InProgress)
     {
         this.AttachToken();
+
         var result = await this.apiClientService.TryRequestAsync<IEnumerable<TaskWebApiModel?>>(
-            () => this.httpClient.GetAsync($"api/Task/AssignedTasks"));
+            () => this.httpClient.GetAsync($"api/Task/assigned?status={status!.Value}"));
 
         return result.Data ?? Enumerable.Empty<TaskWebApiModel>();
     }

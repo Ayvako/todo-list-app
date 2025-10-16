@@ -1,4 +1,5 @@
 using Contracts.Tasks;
+using TaskStatus = Core.Enums.TaskStatus;
 
 namespace Application.Interfaces;
 
@@ -12,7 +13,9 @@ public interface ITaskService
 
     Task<bool> DeleteTaskAsync(int id, int userId);
 
-    Task<List<TaskDto>> GetAssignedTasksAsync(int userId);
+    Task<List<TaskDto>> GetAssignedTasksAsync(int userId, TaskStatus? status = TaskStatus.InProgress);
+
+    Task<List<TaskDto>> GetAllAsync(int userId);
 
     Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto);
 }
