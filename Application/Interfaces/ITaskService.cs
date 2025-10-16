@@ -13,4 +13,6 @@ public interface ITaskService
     Task<bool> DeleteTaskAsync(int id, int userId);
 
     Task<List<TaskDto>> GetAssignedTasksAsync(int userId);
+
+    Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto);
 }

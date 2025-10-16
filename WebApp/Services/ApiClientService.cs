@@ -21,6 +21,7 @@ namespace WebApp.Services
             try
             {
                 ArgumentNullException.ThrowIfNull(request);
+
                 var response = await request();
 
                 if (response.IsSuccessStatusCode)

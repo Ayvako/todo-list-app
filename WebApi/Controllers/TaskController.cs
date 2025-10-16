@@ -87,6 +87,22 @@ public class TaskController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/status")]
+    public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeStatusDto dto)
+    {
+        var userId = this.GetUserId();
+
+        try
+        {
+            var changed = await this.taskService.ChangeStatusAsync(id, userId, dto);
+            return changed ? this.Ok(new { success = true }) : this.NotFound();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return this.Forbid(ex.Message);
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
@@ -95,7 +111,7 @@ public class TaskController : ControllerBase
         try
         {
             var deleted = await this.taskService.DeleteTaskAsync(id, userId);
-            return deleted ? this.NoContent() : this.NotFound();
+            return deleted ? this.Ok(new { success = true }) : this.NotFound();
         }
         catch (UnauthorizedAccessException ex)
         {

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Application.Interfaces;
 using Contracts.Tasks;
 using Contracts.Users;
@@ -84,7 +85,7 @@ public class TaskService : ITaskService
             existing.Assignee = await this.userRepository.GetUserByNameAsync(dto.AssigneeName);
         }
 
-        var updated = await this.repository.UpdateTaskAsync(id, existing);
+        var updated = await this.repository.UpdateTaskAsync(existing);
         return updated == null ? null : MapToDto(updated);
     }
 
@@ -126,5 +127,24 @@ public class TaskService : ITaskService
                     UserName = entity.Assignee.UserName
                 }
         };
+    }
+
+    public async Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto)
+    {
+        var existing = await this.repository.GetTaskByIdAsync(id);
+        if (existing == null)
+        {
+            return false;
+        }
+
+        var isAssignee = existing.AssigneeId == userId;
+        var canEditList = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
+
+        if (!canEditList && !isAssignee)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to delete this task.");
+        }
+
+        return await this.repository.UpdateStatusAsync(id, dto.NewStatus);
     }
 }

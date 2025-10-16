@@ -1,5 +1,4 @@
 using WebApp.Models.Tasks;
-using WebApp.Models.Users;
 
 namespace WebApp.Interfaces;
 
@@ -14,4 +13,6 @@ public interface ITaskWebApiService
     Task<TaskWebApiModel?> UpdateTaskAsync(int id, TaskEditModel model);
 
     Task<IEnumerable<TaskWebApiModel?>> GetAssignedTasksAsync();
+
+    Task<bool> ChangeStatusAsync(int id, ChangeStatusModel model);
 }

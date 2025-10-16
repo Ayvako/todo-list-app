@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
 
@@ -73,6 +74,15 @@ public class TaskWebApiService : ITaskWebApiService
         }
 
         return taskResult.Data;
+    }
+
+    public async Task<bool> ChangeStatusAsync(int id, ChangeStatusModel model)
+    {
+        this.AttachToken();
+
+        var result = await this.apiClientService.TryRequestAsync<object>(
+            () => this.httpClient.PostAsJsonAsync($"api/Task/{id}/status", model));
+        return result.Success;
     }
 
     private void AttachToken()

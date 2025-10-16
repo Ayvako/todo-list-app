@@ -3,6 +3,8 @@ using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
+using TaskStatus = Core.Enums.TaskStatus;
+
 namespace Infrastructure.Repositories;
 
 public class TaskRepository : ITaskRepository
@@ -68,11 +70,11 @@ public class TaskRepository : ITaskRepository
         return true;
     }
 
-    public async Task<TaskEntity?> UpdateTaskAsync(int id, TaskEntity updatedTask)
+    public async Task<TaskEntity?> UpdateTaskAsync(TaskEntity updatedTask)
     {
         ArgumentNullException.ThrowIfNull(updatedTask);
 
-        var entity = await this.db.Tasks.FindAsync(id);
+        var entity = await this.db.Tasks.FindAsync(updatedTask.Id);
         if (entity == null)
         {
             return null;
@@ -87,5 +89,18 @@ public class TaskRepository : ITaskRepository
 
         _ = await this.db.SaveChangesAsync();
         return entity;
+    }
+
+    public async Task<bool> UpdateStatusAsync(int id, TaskStatus newStatus)
+    {
+        var entity = await this.db.Tasks.FindAsync(id);
+        if (entity == null)
+        {
+            return false;
+        }
+
+        entity.Status = newStatus;
+        _ = await this.db.SaveChangesAsync();
+        return true;
     }
 }

@@ -40,7 +40,6 @@
         if (isAuthenticated)
         {
             username = user.FindFirstValue(ClaimTypes.Name) ?? "Unknown";
-            role = user.FindFirstValue(ClaimTypes.Role) ?? "Unknown";
         }
     }
 
@@ -51,7 +50,7 @@
             @if (isAuthenticated)
             {
                 <span class="text-light me-3">
-                    👤 @username (@role)
+                    👤 @username
                 </span>
 
                 <form asp-controller="User" asp-action="Logout" method="post" class="d-inline">

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
+using TaskStatus = Core.Enums.TaskStatus;
 
 namespace WebApp.Controllers;
 
@@ -126,5 +127,29 @@ public class TaskController : Controller
         }
 
         return this.RedirectToAction("Details", "TodoList");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeStatus(int id, ChangeStatusModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.View(model);
+        }
+
+        if (model is null || !Enum.IsDefined(model.NewStatus))
+        {
+            return this.BadRequest("Invalid status value.");
+        }
+
+        var result = await this.taskService.ChangeStatusAsync(id, model);
+
+        if (!result)
+        {
+            return this.NotFound($"Error ChangeStatus.");
+        }
+
+        return this.RedirectToAction("Index", "Task");
     }
 }
