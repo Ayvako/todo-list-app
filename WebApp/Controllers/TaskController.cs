@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
@@ -16,24 +17,39 @@ public class TaskController : Controller
         this.taskService = taskService;
     }
 
-    //[HttpGet]
-    //public async Task<IActionResult> Index()
-    //{
-    //    var lists = await this.taskService.GetAllAsync();
-    //    return this.View(lists);
-    //}
-
     [HttpGet]
-    public async Task<IActionResult> Index(TaskStatus? status = TaskStatus.InProgress)
+    public async Task<IActionResult> Index(TaskStatus? status = TaskStatus.InProgress, string? sortBy = "name", string? sortOrder = "asc")
     {
         if (!this.ModelState.IsValid)
         {
             return this.BadRequest("Invalid request");
         }
 
-        var lists = await this.taskService.GetAssignedTasksAsync(status);
-        ViewBag.SelectedStatus = status;
-        return this.View(lists);
+        var tasks = await this.taskService.GetAssignedTasksAsync(status);
+
+        if (sortBy == null)
+        {
+            sortBy = "name";
+        }
+
+        if (sortOrder == null)
+        {
+            sortOrder = "asc";
+        }
+
+        tasks = (sortBy.ToLower(CultureInfo.CurrentCulture), sortOrder.ToLower(CultureInfo.CurrentCulture)) switch
+        {
+            ("duedate", "asc") => tasks.OrderBy(t => t?.DueDate).ToList(),
+            ("duedate", "desc") => tasks.OrderByDescending(t => t?.DueDate).ToList(),
+            ("name", "desc") => tasks.OrderByDescending(t => t?.Title).ToList(),
+            _ => tasks.OrderBy(t => t?.Title).ToList()
+        };
+
+        this.ViewBag.SelectedStatus = status;
+        this.ViewBag.SortBy = sortBy.ToLower(CultureInfo.CurrentCulture);
+        this.ViewBag.SortOrder = sortOrder.ToLower(CultureInfo.CurrentCulture);
+
+        return this.View(tasks);
     }
 
     [HttpGet]

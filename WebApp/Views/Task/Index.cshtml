@@ -12,22 +12,28 @@
 
 <h2 class="mb-2">Assigned Tasks</h2>
 
-@if (ViewBag.SelectedStatus != null)
-{
-    <span class="badge @GetStatusBadgeClass((Core.Enums.TaskStatus)ViewBag.SelectedStatus)">
-        Current filter: @ViewBag.SelectedStatus
-    </span>
-}
+<form method="get" asp-action="Index" class="mb-4 d-flex align-items-center gap-3">
+    <div>
+        <label for="status" class="form-label fw-semibold me-2">Filter by status:</label>
+        <select name="status" id="status" class="form-select d-inline w-auto" onchange="this.form.submit()">
+            @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
+            {
+                <option value="@s" selected="@(s == (ViewBag.SelectedStatus ?? Core.Enums.TaskStatus.InProgress))">@s</option>
+            }
+        </select>
+    </div>
 
-<form method="get" asp-action="Index" class="my-3">
-    <label for="status" class="form-label fw-semibold me-2">Filter by status:</label>
-    <select name="status" id="status" class="form-select w-auto d-inline" onchange="this.form.submit()">
-        @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
-        {
-            <option value="@s" selected="@(s == (ViewBag.SelectedStatus ?? Core.Enums.TaskStatus.InProgress))">@s</option>
-        }
-    </select>
+    <div>
+        <label class="form-label fw-semibold me-2">Sort by:</label>
+        <a href="@Url.Action("Index", new { status = ViewBag.SelectedStatus, sortBy = "name", sortOrder = ViewBag.SortBy == "name" && ViewBag.SortOrder == "asc" ? "desc" : "asc" })" class="btn btn-outline-primary btn-sm me-1">
+            Task Name @(ViewBag.SortBy == "name" ? (ViewBag.SortOrder == "asc" ? "↑" : "↓") : "")
+        </a>
+        <a href="@Url.Action("Index", new { status = ViewBag.SelectedStatus, sortBy = "duedate", sortOrder = ViewBag.SortBy == "duedate" && ViewBag.SortOrder == "asc" ? "desc" : "asc" })" class="btn btn-outline-primary btn-sm">
+            Due Date @(ViewBag.SortBy == "duedate" ? (ViewBag.SortOrder == "asc" ? "↑" : "↓") : "")
+        </a>
+    </div>
 </form>
+
 
 <div class="row row-cols-1 row-cols-md-2 g-4">
     @foreach (var task in Model)
