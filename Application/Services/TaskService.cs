@@ -37,7 +37,7 @@ public class TaskService : ITaskService
             TodoListId = todoListId,
             AssigneeId = userId,
             CreatedAt = DateTime.UtcNow,
-            Status = Core.Enums.TaskStatus.NotStarted,
+            Status = TaskStatus.NotStarted,
         };
 
         var added = await this.repository.AddTaskAsync(todoListId, entity);
@@ -115,6 +115,8 @@ public class TaskService : ITaskService
 
     public async Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+
         var existing = await this.repository.GetTaskByIdAsync(id);
         if (existing == null)
         {

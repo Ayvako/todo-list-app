@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
@@ -26,6 +27,74 @@ public class TaskWebApiService : ITaskWebApiService
             () => this.httpClient.GetAsync($"api/Task"));
 
         return result.Data ?? Enumerable.Empty<TaskWebApiModel>();
+    }
+
+    public async Task<List<TaskWebApiModel?>> GetSortedAssignedTasks(TaskStatus? status = TaskStatus.InProgress, string? sortBy = "name", string? sortOrder = "asc")
+    {
+        var tasks = await this.GetAssignedTasksAsync(status);
+
+        sortBy ??= "name";
+
+        sortOrder ??= "asc";
+
+        tasks = (sortBy.ToLower(CultureInfo.CurrentCulture), sortOrder.ToLower(CultureInfo.CurrentCulture)) switch
+        {
+            ("duedate", "asc") => tasks.OrderBy(t => t?.DueDate).ToList(),
+            ("duedate", "desc") => tasks.OrderByDescending(t => t?.DueDate).ToList(),
+            ("name", "desc") => tasks.OrderByDescending(t => t?.Title).ToList(),
+            _ => tasks.OrderBy(t => t?.Title).ToList()
+        };
+
+        return tasks.ToList();
+    }
+
+    public async Task<List<TaskWebApiModel?>> GetFilteredTasksAsync(string? searchTitle = null, string createdRange = "month", string dueFilter = "week")
+    {
+        var now = DateTime.UtcNow;
+        var tasks = await this.GetAllAsync();
+
+        if (!string.IsNullOrWhiteSpace(searchTitle))
+        {
+            tasks = tasks
+                .Where(t => t?.Title.Contains(searchTitle, StringComparison.OrdinalIgnoreCase) ?? false)
+                .ToList();
+        }
+
+        if (!string.IsNullOrEmpty(createdRange) && !createdRange.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            DateTime createdFrom = createdRange.ToLower(CultureInfo.CurrentCulture) switch
+            {
+                "today" => now.AddDays(-1),
+                "week" => now.AddDays(-7),
+                "month" => now.AddMonths(-1),
+                "year" => now.AddYears(-1),
+                _ => DateTime.MinValue
+            };
+            tasks = tasks.Where(t => t?.CreatedAt >= createdFrom).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(dueFilter) && !dueFilter.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            if (dueFilter.Equals("overdue", StringComparison.OrdinalIgnoreCase))
+            {
+                tasks = tasks.Where(t => t?.DueDate < now && t.Status != TaskStatus.Completed).ToList();
+            }
+            else
+            {
+                DateTime dueTo = dueFilter.ToLower(CultureInfo.CurrentCulture) switch
+                {
+                    "day" => now.AddDays(1),
+                    "week" => now.AddDays(7),
+                    "month" => now.AddMonths(1),
+                    "year" => now.AddYears(1),
+                    _ => DateTime.MaxValue
+                };
+
+                tasks = tasks.Where(t => t?.DueDate >= now && t.DueDate <= dueTo && t.Status != TaskStatus.Completed).ToList();
+            }
+        }
+
+        return tasks.ToList() ?? new List<TaskWebApiModel?>();
     }
 
     public async Task<TaskWebApiModel?> GetTaskByIdAsync(int id)

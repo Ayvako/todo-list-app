@@ -50,8 +50,12 @@ public class TodoListController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(TodoListCreateModel model)
     {
-        var created = await this.service.AddAsync(model);
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest("Invalid request");
+        }
 
+        var created = await this.service.AddAsync(model);
         if (created == null)
         {
             this.ModelState.AddModelError(string.Empty, "Error creating list");

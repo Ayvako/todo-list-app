@@ -33,6 +33,7 @@ public class TaskRepository : ITaskRepository
         {
             tasks = tasks.Where(t => t.Status == status.Value).ToList();
         }
+        status ??= TaskStatus.InProgress;
 
         return tasks.Where(t => t.Status == status.Value).ToList();
     }
@@ -100,7 +101,6 @@ public class TaskRepository : ITaskRepository
         entity.DueDate = updatedTask.DueDate;
         entity.Status = updatedTask.Status;
         entity.AssigneeId = updatedTask.AssigneeId;
-        entity.Assignee = updatedTask.Assignee;
 
         _ = await this.db.SaveChangesAsync();
         return entity;

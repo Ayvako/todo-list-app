@@ -18,32 +18,50 @@ public class TaskController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(TaskStatus? status = TaskStatus.InProgress, string? sortBy = "name", string? sortOrder = "asc")
+    public async Task<IActionResult> Index(
+     string? searchTitle = null,
+     string createdRange = "month",
+     string dueFilter = "week")
+    {
+        var tasks = await this.taskService.GetFilteredTasksAsync(searchTitle, createdRange, dueFilter);
+
+        this.ViewBag.SearchTitle = searchTitle;
+        this.ViewBag.CreatedRange = createdRange;
+        this.ViewBag.DueFilter = dueFilter;
+
+        return this.View(tasks);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Details(int id)
     {
         if (!this.ModelState.IsValid)
         {
             return this.BadRequest("Invalid request");
         }
 
-        var tasks = await this.taskService.GetAssignedTasksAsync(status);
-
-        if (sortBy == null)
+        var task = await this.taskService.GetTaskByIdAsync(id);
+        if (task == null)
         {
-            sortBy = "name";
+            return this.NotFound();
         }
 
-        if (sortOrder == null)
+        return this.View(task);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AssignedTasks(TaskStatus? status = TaskStatus.InProgress, string? sortBy = "name", string? sortOrder = "asc")
+    {
+        if (!this.ModelState.IsValid)
         {
-            sortOrder = "asc";
+            return this.BadRequest("Invalid request");
         }
 
-        tasks = (sortBy.ToLower(CultureInfo.CurrentCulture), sortOrder.ToLower(CultureInfo.CurrentCulture)) switch
-        {
-            ("duedate", "asc") => tasks.OrderBy(t => t?.DueDate).ToList(),
-            ("duedate", "desc") => tasks.OrderByDescending(t => t?.DueDate).ToList(),
-            ("name", "desc") => tasks.OrderByDescending(t => t?.Title).ToList(),
-            _ => tasks.OrderBy(t => t?.Title).ToList()
-        };
+        var tasks = await this.taskService.GetSortedAssignedTasks(status, sortBy, sortOrder);
+
+        sortBy ??= "name";
+
+        sortOrder ??= "asc";
 
         this.ViewBag.SelectedStatus = status;
         this.ViewBag.SortBy = sortBy.ToLower(CultureInfo.CurrentCulture);

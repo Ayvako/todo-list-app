@@ -116,13 +116,7 @@ public class TodoListService : ITodoListService
 
     public async Task<bool> ShareAsync(int listId, int targetUserId, TodoListAccessRole role, int currentUserId)
     {
-        var list = await this.repository.GetByIdAsync(listId);
-
-        if (list == null)
-        {
-            throw new KeyNotFoundException("List not found.");
-        }
-
+        var list = await this.repository.GetByIdAsync(listId) ?? throw new KeyNotFoundException("List not found.");
         if (list.OwnerId != currentUserId)
         {
             throw new UnauthorizedAccessException("Only the owner can share the list.");
@@ -145,12 +139,7 @@ public class TodoListService : ITodoListService
 
     public async Task<bool> RevokeAccessAsync(int listId, int targetUserId, int currentUserId)
     {
-        var list = await this.repository.GetByIdAsync(listId);
-        if (list == null)
-        {
-            throw new KeyNotFoundException("List not found.");
-        }
-
+        var list = await this.repository.GetByIdAsync(listId) ?? throw new KeyNotFoundException("List not found.");
         if (list.OwnerId != currentUserId)
         {
             throw new UnauthorizedAccessException("Only the owner can revoke access.");

@@ -18,4 +18,14 @@ public interface ITaskWebApiService
     Task<bool> ChangeStatusAsync(int id, ChangeStatusModel model);
 
     Task<IEnumerable<TaskWebApiModel?>> GetAllAsync();
+
+    Task<List<TaskWebApiModel?>> GetFilteredTasksAsync(
+        string? searchTitle = null,
+        string createdRange = "month",
+        string dueFilter = "week");
+
+    Task<List<TaskWebApiModel?>> GetSortedAssignedTasks(
+        TaskStatus? status = TaskStatus.InProgress,
+        string? sortBy = "name",
+        string? sortOrder = "asc");
 }

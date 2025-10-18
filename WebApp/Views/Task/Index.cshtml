@@ -1,38 +1,46 @@
-@using System.Security.Claims
-@using WebApp.Models.Tasks
-@inject IHttpContextAccessor HttpContextAccessor
-@model IEnumerable<TaskWebApiModel>
+@model IEnumerable<WebApp.Models.Tasks.TaskWebApiModel>
 
 @{
-    ViewData["Title"] = "Assigned Tasks";
-    var user = HttpContextAccessor.HttpContext?.User;
-    var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+    ViewData["Title"] = "All Tasks";
     var now = DateTime.UtcNow.ToLocalTime();
 }
 
-<h2 class="mb-2">Assigned Tasks</h2>
+<h2 class="mb-4">All Tasks</h2>
 
-<form method="get" asp-action="Index" class="mb-4 d-flex align-items-center gap-3">
-    <div>
-        <label for="status" class="form-label fw-semibold me-2">Filter by status:</label>
-        <select name="status" id="status" class="form-select d-inline w-auto" onchange="this.form.submit()">
-            @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
-            {
-                <option value="@s" selected="@(s == (ViewBag.SelectedStatus ?? Core.Enums.TaskStatus.InProgress))">@s</option>
-            }
+<form method="get" asp-action="Index" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Search by Title</label>
+        <input type="text" name="searchTitle" value="@ViewBag.SearchTitle" class="form-control" placeholder="Task title..." />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Created Within</label>
+        <select name="createdRange" class="form-select">
+            <option value="today" selected="@(ViewBag.CreatedRange == "today")">Today</option>
+            <option value="week" selected="@(ViewBag.CreatedRange == "week")">Last 7 Days</option>
+            <option value="month" selected="@(ViewBag.CreatedRange == "month")">Last 30 Days</option>
+            <option value="year" selected="@(ViewBag.CreatedRange == "year")">Last Year</option>
+            <option value="all" selected="@(ViewBag.CreatedRange == "all")">All Time</option>
         </select>
     </div>
 
-    <div>
-        <label class="form-label fw-semibold me-2">Sort by:</label>
-        <a href="@Url.Action("Index", new { status = ViewBag.SelectedStatus, sortBy = "name", sortOrder = ViewBag.SortBy == "name" && ViewBag.SortOrder == "asc" ? "desc" : "asc" })" class="btn btn-outline-primary btn-sm me-1">
-            Task Name @(ViewBag.SortBy == "name" ? (ViewBag.SortOrder == "asc" ? "↑" : "↓") : "")
-        </a>
-        <a href="@Url.Action("Index", new { status = ViewBag.SelectedStatus, sortBy = "duedate", sortOrder = ViewBag.SortBy == "duedate" && ViewBag.SortOrder == "asc" ? "desc" : "asc" })" class="btn btn-outline-primary btn-sm">
-            Due Date @(ViewBag.SortBy == "duedate" ? (ViewBag.SortOrder == "asc" ? "↑" : "↓") : "")
-        </a>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Due Filter</label>
+        <select name="dueFilter" class="form-select">
+            <option value="overdue" selected="@(ViewBag.DueFilter == "overdue")">Already Overdue</option>
+            <option value="day" selected="@(ViewBag.DueFilter == "day")">Due in 1 Day</option>
+            <option value="week" selected="@(ViewBag.DueFilter == "week")">Due in 7 Days</option>
+            <option value="month" selected="@(ViewBag.DueFilter == "month")">Due in 30 Days</option>
+            <option value="year" selected="@(ViewBag.DueFilter == "year")">Due in 1 Year</option>
+            <option value="all" selected="@(ViewBag.DueFilter == "all")">All</option>
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
     </div>
 </form>
+
 
 
 <div class="row row-cols-1 row-cols-md-2 g-4">
@@ -41,77 +49,27 @@
         bool isOverdue = task.DueDate.ToLocalTime() < now && task.Status != Core.Enums.TaskStatus.Completed;
 
         <div class="col">
-            <div class="card h-100 rounded-3 shadow-sm border-2">
+            <a asp-action="Details" asp-route-id="@task.Id" class="text-decoration-none text-dark">
+                <div class="card h-100 rounded-3 shadow-sm border-2 @(isOverdue ? "border-danger" : "")">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2 fw-semibold">
+                            @task.Title
+                            @if (isOverdue)
+                            {
+                                <span class="badge bg-danger ms-2">Expired</span>
+                            }
+                        </h5>
 
-                <div class="card-body">
-                    <h5 class="card-title mb-2 fw-semibold">
-                        @task.Title
-                    </h5>                        
+                        <p class="text-muted mb-2">@task.Description</p>
 
-                    <div class="d-flex align-items-center mb-3">
-                        <form asp-action="ChangeStatus" asp-route-id="@task.Id" method="post" class="d-inline-block position-relative">
-                            <button type="button"
-                                    class="badge @GetStatusBadgeClass(task.Status)"
-                                    onclick="this.nextElementSibling.classList.toggle('d-none')"
-                                    style="cursor:pointer;">
-                                @task.Status
-                            </button>
-
-                            <div class="position-absolute mt-1 d-none" style="z-index:1000;">
-                                @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
-                                {
-                                    @if (s != task.Status)
-                                    {
-                                        <button type="submit" name="newStatus" value="@s"
-                                                class="badge @GetStatusBadgeClass(s) d-block mb-1"
-                                                style="width:100%; text-align:left; border:none; cursor:pointer;">
-                                            @s
-                                        </button>
-                                    }
-                                }
-                            </div>
-                        </form>
-
-                        <small class="text-muted ms-2">
-                            Due @task.DueDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
-                        </small>
-                    </div>
-
-
-
-                    <p class="card-text text-muted">@task.Description</p>
-
-                    @if (isOverdue)
-                    {
-                        <div class="alert alert-danger py-1 px-2 mt-2 mb-0 small">
-                            ⚠️ This task is overdue!
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>🗓 Created: @task.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
+                            <span>⏰ Due: @task.DueDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
                         </div>
-                    }
-
-                    <hr class="my-2" />
-
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>Created @task.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
-                        @if (!string.IsNullOrEmpty(task.AssigneeName))
-                        {
-                            <span>👤 @task.AssigneeName</span>
-                        }
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
+
     }
 </div>
-
-@functions {
-    private string GetStatusBadgeClass(Core.Enums.TaskStatus status)
-    {
-        return status switch
-        {
-            Core.Enums.TaskStatus.NotStarted => "bg-secondary",
-            Core.Enums.TaskStatus.InProgress => "bg-warning text-dark",
-            Core.Enums.TaskStatus.Completed => "bg-success",
-            _ => "bg-dark"
-        };
-    }
-}

@@ -29,7 +29,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TaskDto>> GetTaskById(int id)
+    public async Task<ActionResult<TaskDto>> Details(int id)
     {
         TaskDto? task = await this.taskService.GetTaskByIdAsync(id);
 
@@ -52,7 +52,7 @@ public class TaskController : ControllerBase
                 Title = task.Title,
             };
 
-            return this.CreatedAtAction(nameof(this.GetTaskById), new { id = task.Id }, responce);
+            return this.CreatedAtAction(nameof(this.Details), new { id = task.Id }, responce);
         }
         catch (UnauthorizedAccessException ex)
         {
