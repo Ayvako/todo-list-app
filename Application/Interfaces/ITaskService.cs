@@ -18,4 +18,8 @@ public interface ITaskService
     Task<List<TaskDto>> GetAllAsync(int userId);
 
     Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto);
+
+    Task<bool> AddTagAsync(int taskId, string tagName, int userId);
+
+    Task<bool> RemoveTagAsync(int taskId, string tagName, int userId);
 }

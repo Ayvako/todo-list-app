@@ -49,8 +49,8 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto?> GetTaskByIdAsync(int id)
     {
-        var entity = await this.repository.GetTaskByIdAsync(id);
-        return entity == null ? null : MapToDto(entity);
+        var entity = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
+        return MapToDto(entity);
     }
 
     public async Task<List<TaskDto>> GetAllAsync(int userId)
@@ -71,11 +71,7 @@ public class TaskService : ITaskService
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var existing = await this.repository.GetTaskByIdAsync(id);
-        if (existing == null)
-        {
-            return null;
-        }
+        var existing = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
 
         var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
         if (!canEdit)
@@ -98,11 +94,7 @@ public class TaskService : ITaskService
 
     public async Task<bool> DeleteTaskAsync(int id, int userId)
     {
-        var existing = await this.repository.GetTaskByIdAsync(id);
-        if (existing == null)
-        {
-            return false;
-        }
+        var existing = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
 
         var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
         if (!canEdit)
@@ -117,21 +109,40 @@ public class TaskService : ITaskService
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var existing = await this.repository.GetTaskByIdAsync(id);
-        if (existing == null)
-        {
-            return false;
-        }
-
+        var existing = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
         var isAssignee = existing.AssigneeId == userId;
         var canEditList = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
 
         if (!canEditList && !isAssignee)
         {
-            throw new UnauthorizedAccessException("You don't have permission to delete this task.");
+            throw new UnauthorizedAccessException("You don't have permission to change the status of this task.");
         }
 
         return await this.repository.UpdateStatusAsync(id, dto.NewStatus);
+    }
+
+    public async Task<bool> AddTagAsync(int taskId, string tagName, int userId)
+    {
+        var task = await this.repository.GetTaskByIdAsync(taskId) ?? throw new KeyNotFoundException("Task not found.");
+        var canEdit = await this.todoListService.CanEditAsync(task.TodoListId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to add tags to this task.");
+        }
+
+        return await this.repository.AddTagAsync(taskId, tagName);
+    }
+
+    public async Task<bool> RemoveTagAsync(int taskId, string tagName, int userId)
+    {
+        var task = await this.repository.GetTaskByIdAsync(taskId) ?? throw new KeyNotFoundException("Task not found.");
+        var canEdit = await this.todoListService.CanEditAsync(task.TodoListId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to remove tags from this task.");
+        }
+
+        return await this.repository.RemoveTagAsync(taskId, tagName);
     }
 
     private static TaskDto MapToDto(TaskEntity entity)
@@ -153,7 +164,12 @@ public class TaskService : ITaskService
                     Email = entity.Assignee.Email,
                     Role = entity.Assignee.Role,
                     UserName = entity.Assignee.UserName
-                }
+                },
+            Tags = entity.Tags?.Select(t => new TagDto
+            {
+                Id = t.Id,
+                Name = t.Name
+            }).ToList() ?? new List<TagDto>()
         };
     }
 }

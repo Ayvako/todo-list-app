@@ -18,4 +18,8 @@ public interface ITaskRepository
     Task<List<TaskEntity>> GetAllAsync(int userId);
 
     Task<bool> UpdateStatusAsync(int id, TaskStatus newStatus);
+
+    Task<bool> AddTagAsync(int taskId, string tagName);
+
+    Task<bool> RemoveTagAsync(int taskId, string tagName);
 }

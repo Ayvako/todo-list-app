@@ -13,6 +13,4 @@ public class UserWebApiModel
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public UserRole Role { get; set; }
-
-    public string Token { get; set; } = string.Empty;
 }

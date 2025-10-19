@@ -24,4 +24,6 @@ public class TaskWebApiModel
     public string? AssigneeName { get; set; }
 
     public int TodoListId { get; set; }
+
+    public ICollection<TagModel> Tags { get; set; } = new List<TagModel>();
 }

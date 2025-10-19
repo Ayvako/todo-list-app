@@ -60,6 +60,54 @@ public class TaskController : ControllerBase
         }
     }
 
+    [HttpPost("{taskId}/tags")]
+    public async Task<ActionResult<IEnumerable<TagDto>>> AddTag(int taskId, [FromBody] TagCreateDto model)
+    {
+        var userId = this.GetUserId();
+
+        try
+        {
+            var success = await this.taskService.AddTagAsync(taskId, model.Name, userId);
+            if (!success)
+            {
+                return this.NotFound("Task not found or tag could not be added.");
+            }
+
+            var updatedTask = await this.taskService.GetTaskByIdAsync(taskId);
+            return this.Ok(updatedTask?.Tags ?? new List<TagDto>());
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return this.Forbid(ex.Message);
+        }
+    }
+
+    [HttpDelete("{taskId}/tags")]
+    public async Task<IActionResult> RemoveTag(int taskId, [FromBody] TagCreateDto model)
+    {
+        var userId = this.GetUserId();
+
+        try
+        {
+            if (model == null)
+            {
+                return this.BadRequest("Model is null");
+            }
+
+            var success = await this.taskService.RemoveTagAsync(taskId, model.Name, userId);
+            if (!success)
+            {
+                return this.NotFound("Task not found or tag could not be added.");
+            }
+
+            return this.Ok();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return this.Forbid(ex.Message);
+        }
+    }
+
     [HttpPut("{id}")]
     public async Task<ActionResult<TaskEditDto>> EditTask(int id, [FromBody] TaskEditDto model)
     {

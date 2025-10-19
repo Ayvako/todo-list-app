@@ -21,11 +21,15 @@ public interface ITaskWebApiService
 
     Task<List<TaskWebApiModel?>> GetFilteredTasksAsync(
         string? searchTitle = null,
-        string createdRange = "month",
-        string dueFilter = "week");
+        string createdRange = "all",
+        string dueFilter = "all");
 
     Task<List<TaskWebApiModel?>> GetSortedAssignedTasks(
         TaskStatus? status = TaskStatus.InProgress,
         string? sortBy = "name",
         string? sortOrder = "asc");
+
+    Task<bool> AddTagAsync(int taskId, string tagName);
+
+    Task<bool> RemoveTagAsync(int taskId, string tagName);
 }

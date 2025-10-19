@@ -24,7 +24,10 @@ public class TodoListRepository : ITodoListRepository
             .Include(l => l.AccessList)
                 .ThenInclude(a => a.User)
             .Include(l => l.Owner)
-
+            .Include(l => l.Tasks)
+                .ThenInclude(t => t.Tags)
+            .Include(l => l.Tasks)
+                .ThenInclude(t => t.Comments)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -67,6 +70,10 @@ public class TodoListRepository : ITodoListRepository
         var entity = await this.db.TodoLists
             .Include(l => l.Tasks)
                 .ThenInclude(t => t.Assignee)
+            .Include(l => l.Tasks)
+                .ThenInclude(t => t.Tags)
+            .Include(l => l.Tasks)
+                .ThenInclude(t => t.Comments)
             .Include(l => l.AccessList)
             .Include(l => l.Owner)
             .AsNoTracking()

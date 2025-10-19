@@ -24,4 +24,6 @@ public class TaskEditModel
     public string? AssigneeName { get; set; }
 
     public int? AssigneeId { get; set; }
+
+    public ICollection<TagModel> Tags { get; set; } = new List<TagModel>();
 }

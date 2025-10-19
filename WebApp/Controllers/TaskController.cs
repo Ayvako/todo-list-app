@@ -20,8 +20,8 @@ public class TaskController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(
      string? searchTitle = null,
-     string createdRange = "month",
-     string dueFilter = "week")
+     string createdRange = "all",
+     string dueFilter = "all")
     {
         var tasks = await this.taskService.GetFilteredTasksAsync(searchTitle, createdRange, dueFilter);
 
@@ -146,6 +146,7 @@ public class TaskController : Controller
             DueDate = task.DueDate,
             Status = task.Status,
             AssigneeName = task.Assignee?.UserName,
+            Tags = task.Tags,
         };
 
         return this.View(model);
@@ -197,6 +198,32 @@ public class TaskController : Controller
             return this.NotFound($"Error ChangeStatus.");
         }
 
-        return this.RedirectToAction("Index", "Task");
+        return this.RedirectToAction("AssignedTasks", "Task");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddTag(int taskId, TagModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest("Invalid request");
+        }
+
+        _ = await this.taskService.AddTagAsync(taskId, model.Name);
+        return this.RedirectToAction("Details", new { id = taskId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveTag(int taskId, TagModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest("Invalid request");
+        }
+
+        _ = await this.taskService.RemoveTagAsync(taskId, model.Name);
+        return this.RedirectToAction("Details", new { id = taskId });
     }
 }

@@ -48,7 +48,7 @@ public class TaskWebApiService : ITaskWebApiService
         return tasks.ToList();
     }
 
-    public async Task<List<TaskWebApiModel?>> GetFilteredTasksAsync(string? searchTitle = null, string createdRange = "month", string dueFilter = "week")
+    public async Task<List<TaskWebApiModel?>> GetFilteredTasksAsync(string? searchTitle = null, string createdRange = "all", string dueFilter = "all")
     {
         var now = DateTime.UtcNow;
         var tasks = await this.GetAllAsync();
@@ -162,6 +162,28 @@ public class TaskWebApiService : ITaskWebApiService
 
         var result = await this.apiClientService.TryRequestAsync<object>(
             () => this.httpClient.PostAsJsonAsync($"api/Task/{id}/status", model));
+        return result.Success;
+    }
+
+    public async Task<bool> AddTagAsync(int taskId, string tagName)
+    {
+        this.AttachToken();
+        var model = new TagModel { Name = tagName };
+        var result = await this.apiClientService.TryRequestAsync<object>(
+            () => this.httpClient.PostAsJsonAsync($"api/Task/{taskId}/tags", model));
+        return result.Success;
+    }
+
+    public async Task<bool> RemoveTagAsync(int taskId, string tagName)
+    {
+        this.AttachToken();
+        var model = new TagModel { Name = tagName };
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/Task/{taskId}/tags")
+        {
+            Content = JsonContent.Create(model),
+        };
+        var result = await this.apiClientService.TryRequestAsync<object>(
+            () => this.httpClient.SendAsync(request));
         return result.Success;
     }
 

@@ -20,6 +20,8 @@ public class TodoListDbContext : DbContext
 
     public DbSet<UserEntity> Users { get; set; }
 
+    public DbSet<TagEntity> Tags { get; set; }
+
     public DbSet<TodoListAccessEntity> TodoListAccesses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,6 +53,11 @@ public class TodoListDbContext : DbContext
             .WithMany(l => l.AccessList)
             .HasForeignKey(a => a.TodoListId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        _ = modelBuilder.Entity<TaskEntity>()
+            .HasMany(t => t.Tags)
+            .WithMany(tg => tg.Tasks)
+            .UsingEntity(j => j.ToTable("TaskTags"));
 
         _ = modelBuilder.Entity<TaskCommentEntity>()
             .HasOne(c => c.User)

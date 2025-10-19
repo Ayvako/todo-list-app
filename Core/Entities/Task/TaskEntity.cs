@@ -26,7 +26,7 @@ public class TaskEntity
 
     public TodoListEntity TodoList { get; set; } = null!;
 
-    public ICollection<TaskTagEntity> Tags { get; set; } = new HashSet<TaskTagEntity>();
+    public ICollection<TagEntity> Tags { get; set; } = new HashSet<TagEntity>();
 
     public ICollection<TaskCommentEntity> Comments { get; set; } = new HashSet<TaskCommentEntity>();
 }

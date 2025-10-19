@@ -31,11 +31,11 @@ public class TaskRepository : ITaskRepository
         var tasks = await this.GetAllAsync(userId);
         if (status.HasValue)
         {
-            tasks = tasks.Where(t => t.Status == status.Value).ToList();
+            tasks = tasks.Where(t => t.Status == status.Value && t.Assignee.Id == userId).ToList();
         }
-        status ??= TaskStatus.InProgress;
+        status ??= TaskStatus.NotStarted;
 
-        return tasks.Where(t => t.Status == status.Value).ToList();
+        return tasks;
     }
 
     public async Task<List<TaskEntity>> GetAllAsync(int userId)
@@ -46,6 +46,8 @@ public class TaskRepository : ITaskRepository
             .Include(t => t.TodoList)
                 .ThenInclude(l => l.AccessList)
             .Include(t => t.Assignee)
+            .Include(t => t.Tags)
+            .Include(t => t.Comments)
             .AsNoTracking()
             .Where(t =>
                 t.TodoList.OwnerId == userId ||
@@ -59,10 +61,12 @@ public class TaskRepository : ITaskRepository
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        _ = await this.db.TodoLists
-            .Include(l => l.Tasks)
+        var todoListExists = await this.db.TodoLists.AnyAsync(l => l.Id == todoListId);
 
-            .FirstOrDefaultAsync(l => l.Id == todoListId) ?? throw new KeyNotFoundException($"TodoList {todoListId} not found");
+        if (!todoListExists)
+        {
+            throw new KeyNotFoundException($"TodoList {todoListId} not found");
+        }
 
         task.TodoListId = todoListId;
         task.CreatedAt = DateTime.UtcNow;
@@ -115,6 +119,62 @@ public class TaskRepository : ITaskRepository
         }
 
         entity.Status = newStatus;
+        _ = await this.db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> AddTagAsync(int taskId, string tagName)
+    {
+        if (string.IsNullOrWhiteSpace(tagName))
+        {
+            throw new ArgumentException("Tag name cannot be empty.", nameof(tagName));
+        }
+
+        var task = await this.db.Tasks
+            .Include(t => t.Tags)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
+
+        if (task == null)
+        {
+            return false;
+        }
+
+        var tag = await this.db.Tags.FirstOrDefaultAsync(t => t.Name == tagName);
+
+        if (tag == null)
+        {
+            tag = new TagEntity { Name = tagName };
+            _ = this.db.Tags.Add(tag);
+            _ = await this.db.SaveChangesAsync();
+        }
+
+        if (!task.Tags.Any(t => t.Id == tag.Id))
+        {
+            task.Tags.Add(tag);
+            _ = await this.db.SaveChangesAsync();
+        }
+
+        return true;
+    }
+
+    public async Task<bool> RemoveTagAsync(int taskId, string tagName)
+    {
+        var task = await this.db.Tasks
+            .Include(t => t.Tags)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
+
+        if (task == null)
+        {
+            return false;
+        }
+
+        var tag = task.Tags.FirstOrDefault(t => t.Name == tagName);
+        if (tag == null)
+        {
+            return false;
+        }
+
+        _ = task.Tags.Remove(tag);
         _ = await this.db.SaveChangesAsync();
         return true;
     }
