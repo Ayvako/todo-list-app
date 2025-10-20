@@ -56,7 +56,7 @@ public class TaskController : ControllerBase
 
             return this.CreatedAtAction(nameof(this.Details), new { id = task.Id }, responce);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return this.Forbid();
         }
@@ -78,7 +78,7 @@ public class TaskController : ControllerBase
             var updatedTask = await this.taskService.GetTaskByIdAsync(taskId, userId);
             return this.Ok(updatedTask?.Tags ?? new List<TagDto>());
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return this.Forbid();
         }
@@ -104,10 +104,26 @@ public class TaskController : ControllerBase
 
             return this.Ok();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return this.Forbid();
         }
+    }
+
+    [HttpGet("tags")]
+    public async Task<IActionResult> GetTags()
+    {
+        var userId = this.GetUserId();
+        var tags = await this.taskService.GetTagsForUserAsync(userId);
+        return this.Ok(tags);
+    }
+
+    [HttpGet("tag/{tagName}")]
+    public async Task<IActionResult> TasksByTag(string tagName)
+    {
+        var userId = this.GetUserId();
+        var tasks = await this.taskService.GetTasksByTagAsync(tagName, userId);
+        return this.Ok(tasks);
     }
 
     [HttpPut("{id}")]
@@ -140,7 +156,7 @@ public class TaskController : ControllerBase
 
             return this.Ok(responce);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return this.Forbid();
         }
@@ -156,7 +172,7 @@ public class TaskController : ControllerBase
             var changed = await this.taskService.ChangeStatusAsync(id, userId, dto);
             return changed ? this.Ok(new { success = true }) : this.NotFound();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return this.Forbid();
         }
@@ -172,7 +188,7 @@ public class TaskController : ControllerBase
             var deleted = await this.taskService.DeleteTaskAsync(id, userId);
             return deleted ? this.Ok(new { success = true }) : this.NotFound();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return this.Forbid();
         }

@@ -1,0 +1,23 @@
+@using WebApp.Models.Tasks
+@model List<TagModel>
+@{
+    ViewData["Title"] = "All Tags";
+}
+
+<h2 class="mb-4">Tags in Your To-Do Lists</h2>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">You have no tags yet.</p>
+}
+else
+{
+    <div class="d-flex flex-wrap gap-2">
+        @foreach (var tag in Model)
+        {
+            <a asp-action="TasksByTag" asp-route-tagName="@tag.Name" class="badge bg-info text-dark fs-6">
+                @tag.Name
+            </a>
+        }
+    </div>
+}

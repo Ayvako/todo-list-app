@@ -236,4 +236,23 @@ public class TaskController : Controller
         _ = await this.taskService.RemoveTagAsync(taskId, model.Name);
         return this.RedirectToAction("Details", new { id = taskId });
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Tags()
+    {
+        var tags = await this.taskService.GetTagsForCurrentUserAsync();
+        return this.View(tags);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TasksByTag(string tagName)
+    {
+        if (string.IsNullOrWhiteSpace(tagName))
+        {
+            return this.BadRequest();
+        }
+
+        var tasks = await this.taskService.GetTasksByTagAsync(tagName);
+        return this.View(tasks);
+    }
 }

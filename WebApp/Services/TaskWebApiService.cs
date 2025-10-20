@@ -187,6 +187,26 @@ public class TaskWebApiService : ITaskWebApiService
         return result.Success;
     }
 
+    public async Task<IEnumerable<TagModel?>> GetTagsForCurrentUserAsync()
+    {
+        this.AttachToken();
+
+        var result = await this.apiClientService.TryRequestAsync<IEnumerable<TagModel?>>(
+            () => this.httpClient.GetAsync($"api/Task/tags"));
+
+        return result.Data;
+    }
+
+    public async Task<IEnumerable<TaskWebApiModel?>> GetTasksByTagAsync(string tagName)
+    {
+        this.AttachToken();
+
+        var result = await this.apiClientService.TryRequestAsync<IEnumerable<TaskWebApiModel?>>(
+            () => this.httpClient.GetAsync($"api/Task/tag/{tagName}"));
+
+        return result.Data;
+    }
+
     private void AttachToken()
     {
         var token = this.httpContextAccessor.HttpContext?.Request.Cookies["jwt"];

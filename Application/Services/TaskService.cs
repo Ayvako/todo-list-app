@@ -1,10 +1,8 @@
-using System.Threading.Tasks;
 using Application.Interfaces;
 using Contracts.Tasks;
 using Contracts.Users;
 using Core.Entities.Task;
 using Core.Interfaces;
-using Infrastructure.Repositories;
 using TaskStatus = Core.Enums.TaskStatus;
 
 namespace Application.Services;
@@ -154,6 +152,28 @@ public class TaskService : ITaskService
         }
 
         return await this.repository.RemoveTagAsync(taskId, tagName);
+    }
+
+    public async Task<List<TagDto>> GetTagsForUserAsync(int userId)
+    {
+        var tags = await this.repository.GetTagsForUserAsync(userId);
+        return tags.Select(t => new TagDto
+        {
+            Id = t.Id,
+            Name = t.Name,
+        }).ToList();
+    }
+
+    public async Task<List<TaskDto?>> GetTasksByTagAsync(string tagName, int userId)
+    {
+        var entities = await this.repository.GetTasksByTagAsync(tagName, userId);
+        var list = new List<TaskDto>();
+        foreach (var entity in entities)
+        {
+            list.Add(await this.MapToDto(entity, userId));
+        }
+
+        return list;
     }
 
     private async Task<TaskDto> MapToDto(TaskEntity entity, int userId)

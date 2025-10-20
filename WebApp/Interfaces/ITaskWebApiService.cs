@@ -32,4 +32,8 @@ public interface ITaskWebApiService
     Task<bool> AddTagAsync(int taskId, string tagName);
 
     Task<bool> RemoveTagAsync(int taskId, string tagName);
+
+    Task<IEnumerable<TagModel?>> GetTagsForCurrentUserAsync();
+
+    Task<IEnumerable<TaskWebApiModel?>> GetTasksByTagAsync(string tagName);
 }

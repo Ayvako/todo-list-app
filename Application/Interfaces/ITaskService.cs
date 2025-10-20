@@ -22,4 +22,8 @@ public interface ITaskService
     Task<bool> AddTagAsync(int taskId, string tagName, int userId);
 
     Task<bool> RemoveTagAsync(int taskId, string tagName, int userId);
+
+    Task<List<TagDto>> GetTagsForUserAsync(int userId);
+
+    Task<List<TaskDto?>> GetTasksByTagAsync(string tagName, int userId);
 }

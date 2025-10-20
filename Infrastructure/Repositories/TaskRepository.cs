@@ -178,4 +178,27 @@ public class TaskRepository : ITaskRepository
         _ = await this.db.SaveChangesAsync();
         return true;
     }
+
+    public async Task<List<TagEntity>> GetTagsForUserAsync(int userId)
+    {
+        return await this.db.Tasks
+            .Where(t =>
+                t.TodoList.OwnerId == userId ||
+                t.TodoList.AccessList.Any(a => a.UserId == userId))
+            .SelectMany(t => t.Tags)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    public async Task<List<TaskEntity>> GetTasksByTagAsync(string tagName, int userId)
+    {
+        return await this.db.Tasks
+            .Where(t =>
+                (t.TodoList.OwnerId == userId ||
+                 t.TodoList.AccessList.Any(a => a.UserId == userId))
+                && t.Tags.Any(tag => tag.Name == tagName))
+            .Include(t => t.Assignee)
+            .Include(t => t.Tags)
+            .ToListAsync();
+    }
 }
