@@ -154,7 +154,7 @@ public class TaskController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(TaskEditModel model)
+    public async Task<IActionResult> Edit(TaskEditModel model, string? returnUrl)
     {
         if (!this.ModelState.IsValid)
         {
@@ -174,12 +174,17 @@ public class TaskController : Controller
             return this.View(model);
         }
 
-        return this.RedirectToAction("Details", "TodoList");
+        if (!string.IsNullOrEmpty(returnUrl))
+        {
+            return this.Redirect(returnUrl);
+        }
+
+        return this.RedirectToAction("Index");
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangeStatus(int id, ChangeStatusModel model)
+    public async Task<IActionResult> ChangeStatus(int id, ChangeStatusModel model, string? returnUrl)
     {
         if (!this.ModelState.IsValid)
         {
@@ -198,7 +203,12 @@ public class TaskController : Controller
             return this.NotFound($"Error ChangeStatus.");
         }
 
-        return this.RedirectToAction("AssignedTasks", "Task");
+        if (!string.IsNullOrEmpty(returnUrl))
+        {
+            return this.Redirect(returnUrl);
+        }
+
+        return this.RedirectToAction("Index");
     }
 
     [HttpPost]

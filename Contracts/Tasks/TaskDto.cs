@@ -21,6 +21,10 @@ public class TaskDto
 
     public int TodoListId { get; set; }
 
+    public bool CanEdit { get; set; }
+
+    public bool IsAssignee { get; set; }
+
     public List<TagDto> Tags { get; set; } = new();
 
     public List<TaskCommentDto> Comments { get; set; } = new();

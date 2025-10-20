@@ -149,7 +149,7 @@ public class TodoListController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
         catch (InvalidOperationException ex)
         {

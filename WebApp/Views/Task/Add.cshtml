@@ -4,6 +4,8 @@
 <h2>Add Task</h2>
 
 <form asp-action="Add" method="post">
+    @Html.AntiForgeryToken()
+
     <input type="hidden" asp-for="TodoListId" />
 
     <div class="mb-3">

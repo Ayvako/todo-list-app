@@ -3,11 +3,14 @@
 @{
     ViewData["Title"] = "All Tasks";
     var now = DateTime.UtcNow.ToLocalTime();
+    var returnUrl = Context.Request.Headers["Referer"].ToString();
 }
 
 <h2 class="mb-4">All Tasks</h2>
 
 <form method="get" asp-action="Index" class="row g-3 align-items-end mb-4">
+    @Html.AntiForgeryToken()
+
     <div class="col-md-4">
         <label class="form-label fw-semibold">Search by Title</label>
         <input type="text" name="searchTitle" value="@ViewBag.SearchTitle" class="form-control" placeholder="Task title..." />
@@ -41,40 +44,91 @@
     </div>
 </form>
 
-
-
 <div class="row row-cols-1 row-cols-md-2 g-4">
-    @foreach (var task in Model)
-    {
-        bool isOverdue = task.DueDate.ToLocalTime() < now && task.Status != Core.Enums.TaskStatus.Completed;
+@foreach (var task in Model)
+{
+    bool isOverdue = task.DueDate.ToLocalTime() < now && task.Status != Core.Enums.TaskStatus.Completed;
 
         <div class="col">
-            <a asp-action="Details" asp-route-id="@task.Id" class="text-decoration-none text-dark">
-                <div class="card h-100 rounded-3 shadow-sm border-2 @(isOverdue ? "border-danger" : "")">
-                    <div class="card-body">
-                        <h5 class="card-title mb-2 fw-semibold">
+            <div class="card h-100 rounded-3 shadow-sm border-2 @(isOverdue ? "border-danger" : "")">
+                <div class="card-body">
+                    <h5 class="card-title mb-2 fw-semibold">
+                        <a asp-action="Details" asp-route-id="@task.Id" class="text-decoration-none text-dark">
                             @task.Title
-                            @if (isOverdue)
-                            {
-                                <span class="badge bg-danger ms-2">Expired</span>
-                            }
-                        </h5>
+                        </a>
+                        @if (isOverdue)
+                        {
+                            <span class="badge bg-danger ms-2">Expired</span>
+                        }
+                    </h5>
 
-                        <p class="text-muted mb-2">@task.Description</p>
+                    <p class="text-muted mb-2">@task.Description</p>
 
-                        <p class="mb-1">
-                            👤 <strong>Assignee:</strong>
-                            @(string.IsNullOrEmpty(task.Assignee.UserName) ? "—" : task.Assignee.UserName)
-                        </p>
+                    <p class="mb-1">
+                        👤 <strong>Assignee:</strong>
+                        @(string.IsNullOrEmpty(task.Assignee?.UserName) ? "—" : task.Assignee.UserName)
+                    </p>
 
-                        <div class="d-flex justify-content-between small text-muted">
-                            <span>🗓 Created: @task.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
-                            <span>⏰ Due: @task.DueDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
-                        </div>
+                    <div class="d-flex justify-content-between small text-muted mb-2">
+                        <span>🗓 Created: @task.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
+                        <span>⏰ Due: @task.DueDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        @if (task.CanEdit)
+                        {
+                            <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <form asp-action="Delete" asp-route-id="@task.Id" method="post" class="d-inline">
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        }
+                        else if (task.IsAssignee)
+                        {
+                            <form asp-action="ChangeStatus" asp-route-id="@task.Id" method="post" class="d-inline-block position-relative">
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                @Html.AntiForgeryToken()
+                                <button type="button"
+                                        class="badge @GetStatusBadgeClass(task.Status)"
+                                        onclick="this.nextElementSibling.classList.toggle('d-none')"
+                                        style="cursor:pointer;">
+                                    @task.Status
+                                </button>
+
+                                <div class="position-absolute mt-1 d-none" style="z-index:1000;">
+                                    @foreach (Core.Enums.TaskStatus s in Enum.GetValues(typeof(Core.Enums.TaskStatus)))
+                                    {
+                                        @if (s != task.Status)
+                                        {
+                                            <button type="submit" name="newStatus" value="@s"
+                                                    class="badge @GetStatusBadgeClass(s) d-block mb-1"
+                                                    style="width:100%; text-align:left; border:none; cursor:pointer;">
+                                                @s
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Read-only</span>
+                        }
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
-
-    }
+}
 </div>
+@functions {
+    private string GetStatusBadgeClass(Core.Enums.TaskStatus status)
+    {
+        return status switch
+        {
+            Core.Enums.TaskStatus.NotStarted => "bg-secondary",
+            Core.Enums.TaskStatus.InProgress => "bg-warning text-dark",
+            Core.Enums.TaskStatus.Completed => "bg-success",
+            _ => "bg-dark"
+        };
+    }
+}

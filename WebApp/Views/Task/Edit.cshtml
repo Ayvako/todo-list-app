@@ -1,9 +1,14 @@
 @using WebApp.Models.Tasks
 @model TaskEditModel
-
+@{
+    var returnUrl = Context.Request.Headers["Referer"].ToString();
+}
 <h2>Edit Task</h2>
 
 <form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
     <input type="hidden" asp-for="Id" />
 
     <div class="mb-3">
@@ -41,7 +46,6 @@
 
     <button type="submit" class="btn btn-primary">Save</button>
     <a asp-controller="TodoList" asp-action="Index" class="btn btn-secondary">Cancel</a>
-    @Html.AntiForgeryToken()
 
 </form>
 
@@ -57,10 +61,10 @@
                     <span class="badge bg-info text-dark">
                         @tag.Name
                         <form asp-action="RemoveTag" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="taskId" value="@Model.Id" />
                             <input type="hidden" name="Name" value="@tag.Name" />
                             <button type="submit" class="btn-close btn-close-white ms-1" aria-label="Remove"></button>
-                            @Html.AntiForgeryToken()
                         </form>
                     </span>
                 </li>
@@ -69,10 +73,10 @@
     }
 
     <form asp-action="AddTag" method="post" class="d-flex mt-2">
+        @Html.AntiForgeryToken()
         <input type="hidden" name="taskId" value="@Model.Id" />
         <input name="Name" class="form-control me-2" placeholder="Enter tag name" />
         <button type="submit" class="btn btn-outline-primary">Add</button>
-        @Html.AntiForgeryToken()
     </form>
 </div>
 

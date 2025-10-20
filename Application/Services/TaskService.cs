@@ -1,8 +1,10 @@
+using System.Threading.Tasks;
 using Application.Interfaces;
 using Contracts.Tasks;
 using Contracts.Users;
 using Core.Entities.Task;
 using Core.Interfaces;
+using Infrastructure.Repositories;
 using TaskStatus = Core.Enums.TaskStatus;
 
 namespace Application.Services;
@@ -44,27 +46,36 @@ public class TaskService : ITaskService
 
         added.Assignee ??= await this.userRepository.GetByIdAsync(userId);
 
-        return MapToDto(added);
+        return await this.MapToDto(added, userId);
     }
 
-    public async Task<TaskDto?> GetTaskByIdAsync(int id)
+    public async Task<TaskDto?> GetTaskByIdAsync(int id, int userId)
     {
         var entity = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
-        return MapToDto(entity);
+        return await this.MapToDto(entity, userId);
     }
 
     public async Task<List<TaskDto>> GetAllAsync(int userId)
     {
         var entities = await this.repository.GetAllAsync(userId);
-        return entities?.Select(l => MapToDto(l))
-                   .ToList() ?? new List<TaskDto>();
+        var list = new List<TaskDto>();
+        foreach (var entity in entities)
+        {
+            list.Add(await this.MapToDto(entity, userId));
+        }
+        return list;
     }
 
     public async Task<List<TaskDto>> GetAssignedTasksAsync(int userId, TaskStatus? status = TaskStatus.InProgress)
     {
         var entities = await this.repository.GetAssignedTasksAsync(userId, status);
-        return entities?.Select(l => MapToDto(l))
-                   .ToList() ?? new List<TaskDto>();
+        var list = new List<TaskDto>();
+        foreach (var entity in entities)
+        {
+            list.Add(await this.MapToDto(entity, userId));
+        }
+
+        return list;
     }
 
     public async Task<TaskDto?> UpdateTaskAsync(int id, TaskEditDto dto, int userId)
@@ -89,7 +100,7 @@ public class TaskService : ITaskService
         }
 
         var updated = await this.repository.UpdateTaskAsync(existing);
-        return updated == null ? null : MapToDto(updated);
+        return updated == null ? null : await this.MapToDto(updated, userId);
     }
 
     public async Task<bool> DeleteTaskAsync(int id, int userId)
@@ -145,8 +156,10 @@ public class TaskService : ITaskService
         return await this.repository.RemoveTagAsync(taskId, tagName);
     }
 
-    private static TaskDto MapToDto(TaskEntity entity)
+    private async Task<TaskDto> MapToDto(TaskEntity entity, int userId)
     {
+        var canEdit = await this.todoListService.CanEditAsync(entity.TodoListId, userId);
+
         return new TaskDto
         {
             Id = entity.Id,
@@ -156,6 +169,8 @@ public class TaskService : ITaskService
             DueDate = entity.DueDate,
             Status = entity.Status,
             TodoListId = entity.TodoListId,
+            CanEdit = canEdit,
+            IsAssignee = entity.AssigneeId == userId,
             Assignee = entity.Assignee == null
                 ? null
                 : new UserDto
@@ -169,7 +184,7 @@ public class TaskService : ITaskService
             {
                 Id = t.Id,
                 Name = t.Name
-            }).ToList() ?? new List<TagDto>()
+            }).ToList() ?? new List<TagDto>(),
         };
     }
 }

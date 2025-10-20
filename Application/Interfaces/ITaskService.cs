@@ -7,7 +7,7 @@ public interface ITaskService
 {
     Task<TaskDto> AddTaskAsync(int todoListId, TaskCreateDto dto, int userId);
 
-    Task<TaskDto?> GetTaskByIdAsync(int id);
+    Task<TaskDto?> GetTaskByIdAsync(int id, int userId);
 
     Task<TaskDto?> UpdateTaskAsync(int id, TaskEditDto dto, int userId);
 

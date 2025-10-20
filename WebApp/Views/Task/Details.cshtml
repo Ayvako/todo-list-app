@@ -22,10 +22,10 @@
             <dt class="col-sm-3">Due Date:</dt>
             <dd class="col-sm-9">@Model.DueDate.ToLocalTime()</dd>
 
-            @if (!string.IsNullOrEmpty(Model.AssigneeName))
+            @if (!string.IsNullOrEmpty(Model.Assignee.UserName))
             {
                 <dt class="col-sm-3">Assignee:</dt>
-                <dd class="col-sm-9">@Model.AssigneeName</dd>
+                <dd class="col-sm-9">@Model.Assignee.UserName</dd>
             }
 
             @if (Model.Tags != null && Model.Tags.Any())

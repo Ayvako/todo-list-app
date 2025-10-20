@@ -31,7 +31,9 @@ public class TaskController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskDto>> Details(int id)
     {
-        TaskDto? task = await this.taskService.GetTaskByIdAsync(id);
+        var userId = this.GetUserId();
+
+        TaskDto? task = await this.taskService.GetTaskByIdAsync(id, userId);
 
         return task == null ? this.NotFound() : this.Ok(task);
     }
@@ -56,7 +58,7 @@ public class TaskController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
     }
 
@@ -73,12 +75,12 @@ public class TaskController : ControllerBase
                 return this.NotFound("Task not found or tag could not be added.");
             }
 
-            var updatedTask = await this.taskService.GetTaskByIdAsync(taskId);
+            var updatedTask = await this.taskService.GetTaskByIdAsync(taskId, userId);
             return this.Ok(updatedTask?.Tags ?? new List<TagDto>());
         }
         catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
     }
 
@@ -104,7 +106,7 @@ public class TaskController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
     }
 
@@ -140,7 +142,7 @@ public class TaskController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
     }
 
@@ -156,7 +158,7 @@ public class TaskController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
     }
 
@@ -172,7 +174,7 @@ public class TaskController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return this.Forbid(ex.Message);
+            return this.Forbid();
         }
     }
 
