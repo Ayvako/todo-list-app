@@ -29,7 +29,10 @@ public class JwtService : IJwtService
         new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString(CultureInfo.InvariantCulture)),
         new Claim(JwtRegisteredClaimNames.Email, user.Email),
         new Claim(ClaimTypes.Name, user.UserName),
-        new Claim(ClaimTypes.Role, user.Role.ToString()),
+        new Claim(ClaimTypes.Role, user.Role.ToString()
+        ),
+
+        new Claim("TokenVersion", user.TokenVersion.ToString(CultureInfo.InvariantCulture))
     };
 
         var token = new JwtSecurityToken(

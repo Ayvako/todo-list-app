@@ -10,7 +10,9 @@ public interface IUserRepository
 
     Task<UserEntity?> GetUserByNameAsync(string? username);
 
-    Task<UserEntity?> RegisterAsync(string username, string email, string password);
+    Task<UserEntity?> RegisterAsync(UserEntity user);
 
-    Task<UserEntity?> LoginAsync(string email, string password);
+    Task<UserEntity?> GetByEmailAsync(string email);
+
+    Task<bool> UpdateAsync(UserEntity user);
 }

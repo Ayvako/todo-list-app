@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using Application.Interfaces;
@@ -57,12 +58,31 @@ internal static class Program
             {
                 OnMessageReceived = context =>
                 {
-                    if (context.Request.Cookies.TryGetValue("jwt", out var token))
+                    if (context.Request.Cookies.ContainsKey("jwt"))
                     {
-                        context.Token = token;
+                        context.Token = context.Request.Cookies["jwt"];
                     }
 
                     return Task.CompletedTask;
+                },
+                OnTokenValidated = async context =>
+                {
+                    var repo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                    var principal = context.Principal!;
+                    var id = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var version = principal.FindFirst("TokenVersion")?.Value;
+
+                    if (!int.TryParse(id, out var userId) || !int.TryParse(version, out var tokenVersion))
+                    {
+                        context.Fail("Invalid token claims");
+                        return;
+                    }
+
+                    var user = await repo.GetByIdAsync(userId);
+                    if (user == null || user.TokenVersion != tokenVersion)
+                    {
+                        context.Fail("Token is outdated");
+                    }
                 },
             };
         });

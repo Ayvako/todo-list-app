@@ -13,4 +13,6 @@ public class UserDto
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public UserRole Role { get; set; }
+
+    public int TokenVersion { get; set; }
 }

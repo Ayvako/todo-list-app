@@ -1,10 +1,7 @@
 using Core.Entities.TodoUser;
-using Core.Enums;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Infrastructure.Repositories;
 
@@ -42,56 +39,34 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.UserName == username);
     }
 
-    public async Task<UserEntity?> RegisterAsync(string username, string email, string password)
+    public async Task<UserEntity?> RegisterAsync(UserEntity user)
     {
-        bool exists = await this.dbContext.Users.AnyAsync(u => u.Email == email);
+        bool exists = await this.dbContext.Users.AnyAsync(u => u.Email == user.Email);
         if (exists)
         {
             return null;
         }
 
-        string hashed = HashPassword(password);
-
-        var user = new UserEntity
-        {
-            UserName = username,
-            Email = email,
-            PasswordHash = hashed,
-            Role = UserRole.Authorized
-        };
-
         _ = await this.dbContext.Users.AddAsync(user);
         _ = await this.dbContext.SaveChangesAsync();
-
         return user;
     }
 
-    public async Task<UserEntity?> LoginAsync(string email, string password)
+    public async Task<UserEntity?> GetByEmailAsync(string email)
     {
-        var hashed = HashPassword(password);
-
-        var user = await this.dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email == email && u.PasswordHash == hashed);
-
-        if (user == null)
-        {
-            return null;
-        }
-
-        return new UserEntity
-        {
-            Id = user.Id,
-            UserName = user.UserName,
-            Email = user.Email,
-            Role = UserRole.Authorized
-        };
+        return await this.dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    private static string HashPassword(string password)
+    public async Task<bool> UpdateAsync(UserEntity user)
     {
-        var bytes = Encoding.UTF8.GetBytes(password);
-        var hash = SHA256.HashData(bytes);
-        return Convert.ToBase64String(hash);
+        var existing = await this.dbContext.Users.FirstOrDefaultAsync(u => u.Id == user.Id) ?? null;
+        if (existing == null)
+        {
+            return false;
+        }
+
+        _ = this.dbContext.Users.Update(user);
+        _ = await this.dbContext.SaveChangesAsync();
+        return true;
     }
 }

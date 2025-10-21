@@ -107,6 +107,37 @@ public class UserController : ControllerBase
         return this.Ok(response);
     }
 
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
+        await this.userService.SendPasswordResetAsync(dto.Email);
+
+        return this.Ok(new { Message = "If this email exists, you will receive instructions." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
+        bool result = await this.userService.ResetPasswordAsync(dto.Email, dto.Token, dto.NewPassword);
+
+        if (!result)
+        {
+            return this.BadRequest(new { Message = "Invalid token or token expired." });
+        }
+
+        return this.Ok(new { Message = "Password successfully reset." });
+    }
+
     private int GetUserId()
     {
         var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);

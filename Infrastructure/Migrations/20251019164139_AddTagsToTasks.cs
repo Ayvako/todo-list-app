@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,10 +10,10 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
+            _ = migrationBuilder.DropTable(
                 name: "TaskTagEntity");
 
-            migrationBuilder.CreateTable(
+            _ = migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
@@ -23,10 +23,10 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tags", x => x.Id);
+                    _ = table.PrimaryKey("PK_Tags", x => x.Id);
                 });
 
-            migrationBuilder.CreateTable(
+            _ = migrationBuilder.CreateTable(
                 name: "TaskTags",
                 columns: table => new
                 {
@@ -35,14 +35,14 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskTags", x => new { x.TagsId, x.TasksId });
-                    table.ForeignKey(
+                    _ = table.PrimaryKey("PK_TaskTags", x => new { x.TagsId, x.TasksId });
+                    _ = table.ForeignKey(
                         name: "FK_TaskTags_Tags_TagsId",
                         column: x => x.TagsId,
                         principalTable: "Tags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
+                    _ = table.ForeignKey(
                         name: "FK_TaskTags_Tasks_TasksId",
                         column: x => x.TasksId,
                         principalTable: "Tasks",
@@ -50,7 +50,7 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
+            _ = migrationBuilder.CreateIndex(
                 name: "IX_TaskTags_TasksId",
                 table: "TaskTags",
                 column: "TasksId");
@@ -59,13 +59,13 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
+            _ = migrationBuilder.DropTable(
                 name: "TaskTags");
 
-            migrationBuilder.DropTable(
+            _ = migrationBuilder.DropTable(
                 name: "Tags");
 
-            migrationBuilder.CreateTable(
+            _ = migrationBuilder.CreateTable(
                 name: "TaskTagEntity",
                 columns: table => new
                 {
@@ -76,8 +76,8 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskTagEntity", x => x.Id);
-                    table.ForeignKey(
+                    _ = table.PrimaryKey("PK_TaskTagEntity", x => x.Id);
+                    _ = table.ForeignKey(
                         name: "FK_TaskTagEntity_Tasks_TaskId",
                         column: x => x.TaskId,
                         principalTable: "Tasks",
@@ -85,7 +85,7 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
+            _ = migrationBuilder.CreateIndex(
                 name: "IX_TaskTagEntity_TaskId",
                 table: "TaskTagEntity",
                 column: "TaskId");

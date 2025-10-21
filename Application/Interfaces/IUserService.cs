@@ -13,4 +13,8 @@ public interface IUserService
     Task<UserDto?> LoginAsync(string email, string password);
 
     Task<UserDto?> GetUserByNameAsync(string username);
+
+    Task SendPasswordResetAsync(string email);
+
+    Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
 }

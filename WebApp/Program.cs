@@ -39,19 +39,17 @@ internal static class Program
 
         _ = builder.Services.AddHttpContextAccessor();
 
-        _ = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
+        _ = builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
             {
                 options.LoginPath = "/User/Login";
                 options.LogoutPath = "/User/Logout";
                 options.ExpireTimeSpan = TimeSpan.FromHours(1);
-            });
-
-        _ = builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
+            })
         .AddJwtBearer(options =>
         {
             options.TokenValidationParameters = new TokenValidationParameters
@@ -69,9 +67,9 @@ internal static class Program
             {
                 OnMessageReceived = context =>
                 {
-                    if (context.Request.Cookies.TryGetValue("jwt", out var token))
+                    if (context.Request.Cookies.ContainsKey("jwt"))
                     {
-                        context.Token = token;
+                        context.Token = context.Request.Cookies["jwt"];
                     }
 
                     return Task.CompletedTask;
@@ -93,7 +91,6 @@ internal static class Program
         _ = app.UseStaticFiles();
 
         _ = app.UseRouting();
-
         _ = app.UseAuthentication();
         _ = app.UseAuthorization();
 

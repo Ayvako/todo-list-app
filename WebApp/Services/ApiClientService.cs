@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -5,10 +6,13 @@ namespace WebApp.Services
 {
     public class ApiClientService
     {
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly JsonSerializerOptions jsonOptions;
 
-        public ApiClientService()
+        public ApiClientService(IHttpContextAccessor httpContextAccessor)
         {
+            this.httpContextAccessor = httpContextAccessor;
+
             this.jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -24,6 +28,23 @@ namespace WebApp.Services
 
                 var response = await request();
 
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    var context = this.httpContextAccessor.HttpContext;
+                    context?.Response.Cookies.Delete("jwt");
+
+                    if (context != null && !context.Response.HasStarted)
+                    {
+                        context.Response.Redirect("/User/Login");
+                    }
+
+                    return new ApiResult<T>
+                    {
+                        Success = false,
+                        ErrorMessage = "Unauthorized: please login again.",
+                    };
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     var data = await response.Content.ReadFromJsonAsync<T>(this.jsonOptions);
@@ -31,7 +52,6 @@ namespace WebApp.Services
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
-
                 string message = ExtractErrorMessage(content);
 
                 return new ApiResult<T> { Success = false, ErrorMessage = message };

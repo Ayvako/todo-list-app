@@ -32,10 +32,9 @@
 
     @{
         var user = HttpContextAccessor.HttpContext?.User;
-        var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+        bool isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
 
         string? username = null;
-
         if (isAuthenticated)
         {
             username = user.FindFirstValue(ClaimTypes.Name) ?? "Unknown";

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
 using WebApp.Models.Users;
+using WebApp.Views.User;
 
 namespace WebApp.Controllers;
 
@@ -72,5 +73,57 @@ public class UserController : Controller
     {
         this.Response.Cookies.Delete("jwt");
         return this.RedirectToAction("Login");
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPassword() => this.View();
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.View(model);
+        }
+
+        var response = await this.userService.ForgotPasswordAsync(model);
+
+        if (response)
+        {
+            this.ViewBag.SuccessMessage = "If an account with that email exists, a reset link has been sent.";
+            return this.View();
+        }
+
+        this.ModelState.AddModelError(string.Empty, "Failed to send reset link.");
+        return this.View(model);
+    }
+
+    [HttpGet]
+    public IActionResult ResetPassword(string email, string token)
+    {
+        var model = new ResetPasswordModel { Email = email, Token = token };
+        return this.View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordModel model)
+    {
+        if (!this.ModelState.IsValid)
+        {
+            return this.View(model);
+        }
+
+        var result = await this.userService.ResetPasswordAsync(model);
+
+        if (result.Success)
+        {
+            this.ViewBag.SuccessMessage = "Your password has been reset successfully. You can now log in.";
+            return this.View();
+        }
+
+        this.ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Failed to reset password.");
+        return this.View(model);
     }
 }

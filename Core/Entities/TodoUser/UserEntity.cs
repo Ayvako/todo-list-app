@@ -21,6 +21,12 @@ public class UserEntity
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
 
+    public string? ResetToken { get; set; }
+
+    public DateTime? ResetTokenExpires { get; set; }
+
+    public int TokenVersion { get; set; }
+
     public UserRole Role { get; set; } = UserRole.Unauthorized;
 
     public ICollection<TaskCommentEntity> Comments { get; set; } = new HashSet<TaskCommentEntity>();
