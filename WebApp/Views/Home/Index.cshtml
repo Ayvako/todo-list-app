@@ -29,9 +29,7 @@ else
         <a asp-controller="TodoList" asp-action="Index" class="btn btn-primary ms-2">View all lists</a>
         <a asp-controller="Task" asp-action="AssignedTasks" class="btn btn-outline-primary ms-2">Assigned tasks</a>
         <a asp-controller="Task" asp-action="Index" class="btn btn-outline-primary ms-2"> All tasks</a>
-        <a asp-controller="Task" asp-action="Tags" class="btn btn-outline-secondary">Tags</a>
-
-
+        <a asp-controller="Tag" asp-action="Index" class="btn btn-outline-primary ms-2">Tags</a>
     </div>
 
     @if (userLists.Any())

@@ -1,3 +1,4 @@
+using Infrastructure.Http;
 using WebApp.Interfaces;
 using WebApp.Models.Users;
 using WebApp.Views.User;

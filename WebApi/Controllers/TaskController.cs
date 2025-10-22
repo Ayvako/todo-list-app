@@ -32,101 +32,35 @@ public class TaskController : ControllerBase
     public async Task<ActionResult<TaskDto>> GetById(int id)
     {
         var userId = this.GetUserId();
-        var task = await this.taskService.GetTaskByIdAsync(id, userId);
-        if (task is null)
-        {
-            throw new KeyNotFoundException("Task not found.");
-        }
-
+        var task = await this.taskService.GetTaskByIdAsync(id, userId)
+            ?? throw new KeyNotFoundException("Task not found.");
         return this.Ok(task);
     }
 
     [HttpPost("{todoListId:int}/tasks")]
-    public async Task<ActionResult<TaskDto>> AddTask(int todoListId, [FromBody] TaskCreateDto model)
+    public async Task<ActionResult<TaskDto>> AddTask(int todoListId, [FromBody] TaskCreateDto dto)
     {
-        if (model is null || !this.ModelState.IsValid)
+        if (dto is null || !this.ModelState.IsValid)
         {
             return this.BadRequest(this.ModelState);
         }
 
         var userId = this.GetUserId();
-        var created = await this.taskService.AddTaskAsync(todoListId, model, userId);
+        var created = await this.taskService.AddTaskAsync(todoListId, dto, userId);
         return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, created);
     }
 
-    [HttpPost("{taskId:int}/tags")]
-    public async Task<ActionResult<IEnumerable<TagDto>>> AddTag(int taskId, [FromBody] TagCreateDto model)
-    {
-        if (model is null || string.IsNullOrWhiteSpace(model.Name))
-        {
-            return this.BadRequest("Tag name is required.");
-        }
-
-        var userId = this.GetUserId();
-        var success = await this.taskService.AddTagAsync(taskId, model.Name, userId);
-        if (!success)
-        {
-            throw new KeyNotFoundException("Task not found or tag could not be added.");
-        }
-
-        var updatedTask = await this.taskService.GetTaskByIdAsync(taskId, userId);
-        return this.Ok(updatedTask?.Tags ?? new List<TagDto>());
-    }
-
-    [HttpDelete("{taskId:int}/tags")]
-    public async Task<IActionResult> RemoveTag(int taskId, [FromBody] TagCreateDto model)
-    {
-        if (model is null || string.IsNullOrWhiteSpace(model.Name))
-        {
-            return this.BadRequest("Tag name is required.");
-        }
-
-        var userId = this.GetUserId();
-        var success = await this.taskService.RemoveTagAsync(taskId, model.Name, userId);
-        if (!success)
-        {
-            throw new KeyNotFoundException("Task not found or tag could not be removed.");
-        }
-
-        return this.Ok();
-    }
-
-    [HttpGet("tags")]
-    public async Task<ActionResult<IEnumerable<TagDto>>> GetTags()
-    {
-        var userId = this.GetUserId();
-        var tags = await this.taskService.GetTagsForUserAsync(userId);
-        return this.Ok(tags);
-    }
-
-    [HttpGet("tag/{tagName}")]
-    public async Task<ActionResult<IEnumerable<TaskDto>>> GetByTag(string tagName)
-    {
-        if (string.IsNullOrWhiteSpace(tagName))
-        {
-            return this.BadRequest("Tag name is required.");
-        }
-
-        var userId = this.GetUserId();
-        var tasks = await this.taskService.GetTasksByTagAsync(tagName, userId);
-        return this.Ok(tasks);
-    }
-
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<TaskDto>> Update(int id, [FromBody] TaskEditDto model)
+    public async Task<ActionResult<TaskDto>> Update(int id, [FromBody] TaskEditDto dto)
     {
-        if (model is null || !this.ModelState.IsValid)
+        if (dto is null || !this.ModelState.IsValid)
         {
             return this.BadRequest(this.ModelState);
         }
 
         var userId = this.GetUserId();
-        var updated = await this.taskService.UpdateTaskAsync(id, model, userId);
-        if (updated is null)
-        {
-            throw new KeyNotFoundException("Task not found.");
-        }
-
+        var updated = await this.taskService.UpdateTaskAsync(id, dto, userId)
+            ?? throw new KeyNotFoundException("Task not found.");
         return this.Ok(updated);
     }
 
@@ -166,6 +100,19 @@ public class TaskController : ControllerBase
     {
         var userId = this.GetUserId();
         var tasks = await this.taskService.GetAssignedTasksAsync(userId, status);
+        return this.Ok(tasks);
+    }
+
+    [HttpGet("{tagName}")]
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetByTag(string tagName)
+    {
+        if (string.IsNullOrWhiteSpace(tagName))
+        {
+            return this.BadRequest("Tag name is required.");
+        }
+
+        var userId = this.GetUserId();
+        var tasks = await this.taskService.GetTasksByTagAsync(tagName, userId);
         return this.Ok(tasks);
     }
 

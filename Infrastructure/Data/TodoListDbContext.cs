@@ -1,3 +1,5 @@
+using Core.Entities.Comment;
+using Core.Entities.Tag;
 using Core.Entities.Task;
 using Core.Entities.TodoList;
 using Core.Entities.TodoUser;
@@ -16,7 +18,7 @@ public class TodoListDbContext : DbContext
 
     public DbSet<TaskEntity> Tasks { get; set; }
 
-    public DbSet<TaskCommentEntity> Comments { get; set; }
+    public DbSet<CommentEntity> Comments { get; set; }
 
     public DbSet<UserEntity> Users { get; set; }
 
@@ -59,13 +61,13 @@ public class TodoListDbContext : DbContext
             .WithMany(tg => tg.Tasks)
             .UsingEntity(j => j.ToTable("TaskTags"));
 
-        _ = modelBuilder.Entity<TaskCommentEntity>()
+        _ = modelBuilder.Entity<CommentEntity>()
             .HasOne(c => c.User)
             .WithMany(u => u.Comments)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        _ = modelBuilder.Entity<TaskCommentEntity>()
+        _ = modelBuilder.Entity<CommentEntity>()
             .HasOne(c => c.Task)
             .WithMany(t => t.Comments)
             .HasForeignKey(c => c.TaskId)

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using WebApp.Models.Tags;
 using WebApp.Models.Users;
 using TaskStatus = Core.Enums.TaskStatus;
 

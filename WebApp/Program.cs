@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Infrastructure.Http;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -33,6 +34,9 @@ internal static class Program
             client.BaseAddress = new Uri(baseUrl));
 
         _ = builder.Services.AddHttpClient<IUserWebApiService, UserWebApiService>(client =>
+            client.BaseAddress = new Uri(baseUrl));
+
+        _ = builder.Services.AddHttpClient<ITagWebApiService, TagWebApiService>(client =>
             client.BaseAddress = new Uri(baseUrl));
 
         _ = builder.Services.AddScoped<ApiClientService>();

@@ -217,39 +217,6 @@ public class TaskController : Controller
         return this.RedirectToAction("Index");
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddTag(int taskId, TagModel model)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return this.BadRequest("Invalid request");
-        }
-
-        _ = await this.taskService.AddTagAsync(taskId, model.Name);
-        return this.RedirectToAction("Details", new { id = taskId });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RemoveTag(int taskId, TagModel model)
-    {
-        if (!this.ModelState.IsValid)
-        {
-            return this.BadRequest("Invalid request");
-        }
-
-        _ = await this.taskService.RemoveTagAsync(taskId, model.Name);
-        return this.RedirectToAction("Details", new { id = taskId });
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Tags()
-    {
-        var tags = await this.taskService.GetTagsForCurrentUserAsync();
-        return this.View(tags);
-    }
-
     [HttpGet]
     public async Task<IActionResult> TasksByTag(string tagName)
     {

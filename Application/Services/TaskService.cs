@@ -1,7 +1,6 @@
 using Application.Interfaces;
 using Application.Mappers;
 using Contracts.Tasks;
-using Contracts.Users;
 using Core.Entities.Task;
 using Core.Interfaces;
 using TaskStatus = Core.Enums.TaskStatus;
@@ -129,40 +128,6 @@ public class TaskService : ITaskService
         }
 
         return await this.repository.UpdateStatusAsync(id, dto.NewStatus);
-    }
-
-    public async Task<bool> AddTagAsync(int taskId, string tagName, int userId)
-    {
-        var task = await this.repository.GetTaskByIdAsync(taskId) ?? throw new KeyNotFoundException("Task not found.");
-        var canEdit = await this.todoListService.CanEditAsync(task.TodoListId, userId);
-        if (!canEdit)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to add tags to this task.");
-        }
-
-        return await this.repository.AddTagAsync(taskId, tagName);
-    }
-
-    public async Task<bool> RemoveTagAsync(int taskId, string tagName, int userId)
-    {
-        var task = await this.repository.GetTaskByIdAsync(taskId) ?? throw new KeyNotFoundException("Task not found.");
-        var canEdit = await this.todoListService.CanEditAsync(task.TodoListId, userId);
-        if (!canEdit)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to remove tags from this task.");
-        }
-
-        return await this.repository.RemoveTagAsync(taskId, tagName);
-    }
-
-    public async Task<List<TagDto>> GetTagsForUserAsync(int userId)
-    {
-        var tags = await this.repository.GetTagsForUserAsync(userId);
-        return tags.Select(t => new TagDto
-        {
-            Id = t.Id,
-            Name = t.Name,
-        }).ToList();
     }
 
     public async Task<List<TaskDto?>> GetTasksByTagAsync(string tagName, int userId)

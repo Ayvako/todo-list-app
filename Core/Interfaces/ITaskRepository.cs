@@ -19,11 +19,5 @@ public interface ITaskRepository
 
     Task<bool> UpdateStatusAsync(int id, TaskStatus newStatus);
 
-    Task<bool> AddTagAsync(int taskId, string tagName);
-
-    Task<bool> RemoveTagAsync(int taskId, string tagName);
-
-    Task<List<TagEntity>> GetTagsForUserAsync(int userId);
-
     Task<List<TaskEntity>> GetTasksByTagAsync(string tagName, int userId);
 }

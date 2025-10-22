@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net.Http.Headers;
+using Infrastructure.Http;
 using WebApp.Interfaces;
 using WebApp.Models.Tasks;
 using TaskStatus = Core.Enums.TaskStatus;
@@ -165,44 +166,12 @@ public class TaskWebApiService : ITaskWebApiService
         return result.Success;
     }
 
-    public async Task<bool> AddTagAsync(int taskId, string tagName)
-    {
-        this.AttachToken();
-        var model = new TagModel { Name = tagName };
-        var result = await this.apiClientService.TryRequestAsync<object>(
-            () => this.httpClient.PostAsJsonAsync($"api/Task/{taskId}/tags", model));
-        return result.Success;
-    }
-
-    public async Task<bool> RemoveTagAsync(int taskId, string tagName)
-    {
-        this.AttachToken();
-        var model = new TagModel { Name = tagName };
-        using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/Task/{taskId}/tags")
-        {
-            Content = JsonContent.Create(model),
-        };
-        var result = await this.apiClientService.TryRequestAsync<object>(
-            () => this.httpClient.SendAsync(request));
-        return result.Success;
-    }
-
-    public async Task<IEnumerable<TagModel?>> GetTagsForCurrentUserAsync()
-    {
-        this.AttachToken();
-
-        var result = await this.apiClientService.TryRequestAsync<IEnumerable<TagModel?>>(
-            () => this.httpClient.GetAsync($"api/Task/tags"));
-
-        return result.Data;
-    }
-
     public async Task<IEnumerable<TaskWebApiModel?>> GetTasksByTagAsync(string tagName)
     {
         this.AttachToken();
 
         var result = await this.apiClientService.TryRequestAsync<IEnumerable<TaskWebApiModel?>>(
-            () => this.httpClient.GetAsync($"api/Task/tag/{tagName}"));
+            () => this.httpClient.GetAsync($"api/Task/{tagName}"));
 
         return result.Data;
     }

@@ -1,3 +1,5 @@
+using Core.Entities.Comment;
+using Core.Entities.Tag;
 using Core.Entities.TodoList;
 using Core.Entities.TodoUser;
 using TaskStatus = Core.Enums.TaskStatus;
@@ -28,5 +30,5 @@ public class TaskEntity
 
     public ICollection<TagEntity> Tags { get; set; } = new HashSet<TagEntity>();
 
-    public ICollection<TaskCommentEntity> Comments { get; set; } = new HashSet<TaskCommentEntity>();
+    public ICollection<CommentEntity> Comments { get; set; } = new HashSet<CommentEntity>();
 }

@@ -29,11 +29,5 @@ public interface ITaskWebApiService
         string? sortBy = "name",
         string? sortOrder = "asc");
 
-    Task<bool> AddTagAsync(int taskId, string tagName);
-
-    Task<bool> RemoveTagAsync(int taskId, string tagName);
-
-    Task<IEnumerable<TagModel?>> GetTagsForCurrentUserAsync();
-
     Task<IEnumerable<TaskWebApiModel?>> GetTasksByTagAsync(string tagName);
 }

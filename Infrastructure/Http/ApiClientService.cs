@@ -1,8 +1,11 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using WebApp.ApiClient;
 
-namespace WebApp.Services
+namespace Infrastructure.Http
 {
     public class ApiClientService
     {
@@ -57,7 +60,7 @@ namespace WebApp.Services
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
-                string message = ExtractErrorMessage(content);
+                var message = ExtractErrorMessage(content);
 
                 return new ApiResult<T> { Success = false, ErrorMessage = message };
             }

@@ -1,4 +1,6 @@
-namespace Core.Entities.Task;
+using Core.Entities.Task;
+
+namespace Core.Entities.Tag;
 
 public class TagEntity
 {

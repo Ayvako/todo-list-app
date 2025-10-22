@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Contracts.Tasks;
+namespace Contracts.Tags;
 
 public class TagCreateDto
 {

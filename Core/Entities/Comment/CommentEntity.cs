@@ -1,8 +1,9 @@
+using Core.Entities.Task;
 using Core.Entities.TodoUser;
 
-namespace Core.Entities.Task;
+namespace Core.Entities.Comment;
 
-public class TaskCommentEntity
+public class CommentEntity
 {
     public int Id { get; set; }
 

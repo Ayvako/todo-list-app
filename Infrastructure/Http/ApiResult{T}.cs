@@ -1,4 +1,4 @@
-namespace WebApp.Services
+namespace WebApp.ApiClient
 {
     public class ApiResult<T>
     {

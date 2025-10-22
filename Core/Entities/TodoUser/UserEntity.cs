@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Core.Entities.Comment;
 using Core.Entities.Task;
 using Core.Entities.TodoList;
 using Core.Enums;
@@ -29,7 +30,7 @@ public class UserEntity
 
     public UserRole Role { get; set; } = UserRole.Unauthorized;
 
-    public ICollection<TaskCommentEntity> Comments { get; set; } = new HashSet<TaskCommentEntity>();
+    public ICollection<CommentEntity> Comments { get; set; } = new HashSet<CommentEntity>();
 
     public ICollection<TodoListEntity> OwnedLists { get; set; } = new HashSet<TodoListEntity>();
 

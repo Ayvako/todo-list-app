@@ -1,4 +1,4 @@
-namespace WebApp.Models.Tasks;
+namespace WebApp.Models.Tags;
 
 public class TagModel
 {
