@@ -117,13 +117,13 @@ public class UserController : Controller
 
         var result = await this.userService.ResetPasswordAsync(model);
 
-        if (result.Success)
+        if (result)
         {
             this.ViewBag.SuccessMessage = "Your password has been reset successfully. You can now log in.";
             return this.View();
         }
 
-        this.ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Failed to reset password.");
+        this.ModelState.AddModelError(string.Empty, "Failed to reset password.");
         return this.View(model);
     }
 }

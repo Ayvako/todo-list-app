@@ -3,14 +3,11 @@
 @{
     ViewData["Title"] = "All Tasks";
     var now = DateTime.UtcNow.ToLocalTime();
-    var returnUrl = Context.Request.Headers["Referer"].ToString();
 }
 
 <h2 class="mb-4">All Tasks</h2>
 
 <form method="get" asp-action="Index" class="row g-3 align-items-end mb-4">
-    @Html.AntiForgeryToken()
-
     <div class="col-md-4">
         <label class="form-label fw-semibold">Search by Title</label>
         <input type="text" name="searchTitle" value="@ViewBag.SearchTitle" class="form-control" placeholder="Task title..." />
@@ -79,14 +76,15 @@
                         {
                             <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-outline-primary">Edit</a>
                             <form asp-action="Delete" asp-route-id="@task.Id" method="post" class="d-inline">
-                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                             </form>
+
                         }
                         else if (task.IsAssignee)
                         {
                             <form asp-action="ChangeStatus" asp-route-id="@task.Id" method="post" class="d-inline-block position-relative">
-                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
                                 @Html.AntiForgeryToken()
                                 <button type="button"
                                         class="badge @GetStatusBadgeClass(task.Status)"
@@ -114,12 +112,15 @@
                         {
                             <span class="badge bg-secondary">Read-only</span>
                         }
+                        <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+
                     </div>
                 </div>
             </div>
         </div>
 }
 </div>
+
 @functions {
     private string GetStatusBadgeClass(Core.Enums.TaskStatus status)
     {

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using WebApi.Middlewares;
 
 namespace WebApi;
 
@@ -136,6 +137,8 @@ internal static class Program
         }
 
         _ = app.UseHttpsRedirection();
+
+        _ = app.UseMiddleware<ExceptionHandlingMiddleware>();
 
         _ = app.UseAuthentication();
         _ = app.UseAuthorization();

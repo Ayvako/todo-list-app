@@ -1,12 +1,16 @@
 @using WebApp.Models.Tasks
 @model IEnumerable<TaskWebApiModel>
 @{
-    ViewData["Title"] = $"Tasks tagged with '{Context.Request.Query["tagName"]}'";
     var tagName = Context.Request.Query["tagName"];
+    ViewData["Title"] = $"Tasks tagged with '{tagName}'";
 }
 
-<h2 class="mb-4">Tasks tagged with “@tagName”</h2>
-
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Tasks tagged with “@tagName”</h2>
+    <a asp-action="Tags" class="btn btn-secondary">
+        ← Back to all tags
+    </a>
+</div>
 @if (!Model.Any())
 {
     <div class="alert alert-warning">No tasks found with this tag.</div>

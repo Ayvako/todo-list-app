@@ -88,8 +88,9 @@ public class TodoListWebApiService : ITodoListWebApiService
     {
         this.AttachToken();
 
-        var response = await this.httpClient.DeleteAsync($"api/TodoList/{id}");
-        return response.IsSuccessStatusCode;
+        var response = await this.apiClientService.TryRequestAsync<bool>(
+            () => this.httpClient.DeleteAsync($"api/TodoList/{id}"));
+        return response.Success;
     }
 
     public async Task<bool> ShareAsync(ShareModel model)
@@ -97,8 +98,9 @@ public class TodoListWebApiService : ITodoListWebApiService
         ArgumentNullException.ThrowIfNull(model);
         this.AttachToken();
 
-        var response = await this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/share", model);
-        return response.IsSuccessStatusCode;
+        var response = await this.apiClientService.TryRequestAsync<object>(
+            () => this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/share", model));
+        return response.Success;
     }
 
     public async Task<bool> RevokeAsync(RevokeModel model)
@@ -106,9 +108,9 @@ public class TodoListWebApiService : ITodoListWebApiService
         ArgumentNullException.ThrowIfNull(model);
 
         this.AttachToken();
-
-        var response = await this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/revoke", model);
-        return response.IsSuccessStatusCode;
+        var response = await this.apiClientService.TryRequestAsync<object>(
+            () => this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/revoke", model));
+        return response.Success;
     }
 
     private void AttachToken()

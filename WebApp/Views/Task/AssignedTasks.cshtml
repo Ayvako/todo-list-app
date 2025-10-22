@@ -8,7 +8,6 @@
     var user = HttpContextAccessor.HttpContext?.User;
     var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
     var now = DateTime.UtcNow.ToLocalTime();
-    var returnUrl = Context.Request.Headers["Referer"].ToString();
 }
 
 <h2 class="mb-2">Assigned Tasks</h2>
@@ -51,7 +50,7 @@
 
                     <div class="d-flex align-items-center mb-3">
                         <form asp-action="ChangeStatus" asp-route-id="@task.Id" method="post" class="d-inline-block position-relative">
-                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
                             @Html.AntiForgeryToken()
                             <button type="button"
                                     class="badge @GetStatusBadgeClass(task.Status)"

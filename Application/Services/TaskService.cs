@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Application.Mappers;
 using Contracts.Tasks;
 using Contracts.Users;
 using Core.Entities.Task;
@@ -167,7 +168,7 @@ public class TaskService : ITaskService
     public async Task<List<TaskDto?>> GetTasksByTagAsync(string tagName, int userId)
     {
         var entities = await this.repository.GetTasksByTagAsync(tagName, userId);
-        var list = new List<TaskDto>();
+        var list = new List<TaskDto?>();
         foreach (var entity in entities)
         {
             list.Add(await this.MapToDto(entity, userId));
@@ -178,33 +179,9 @@ public class TaskService : ITaskService
 
     private async Task<TaskDto> MapToDto(TaskEntity entity, int userId)
     {
-        var canEdit = await this.todoListService.CanEditAsync(entity.TodoListId, userId);
-
-        return new TaskDto
-        {
-            Id = entity.Id,
-            Title = entity.Title,
-            Description = entity.Description,
-            CreatedAt = entity.CreatedAt,
-            DueDate = entity.DueDate,
-            Status = entity.Status,
-            TodoListId = entity.TodoListId,
-            CanEdit = canEdit,
-            IsAssignee = entity.AssigneeId == userId,
-            Assignee = entity.Assignee == null
-                ? null
-                : new UserDto
-                {
-                    Id = entity.Assignee.Id,
-                    Email = entity.Assignee.Email,
-                    Role = entity.Assignee.Role,
-                    UserName = entity.Assignee.UserName
-                },
-            Tags = entity.Tags?.Select(t => new TagDto
-            {
-                Id = t.Id,
-                Name = t.Name
-            }).ToList() ?? new List<TagDto>(),
-        };
+        var dto = entity.ToDto();
+        dto.CanEdit = await this.todoListService.CanEditAsync(entity.TodoListId, userId);
+        dto.IsAssignee = entity.AssigneeId == userId;
+        return dto;
     }
 }

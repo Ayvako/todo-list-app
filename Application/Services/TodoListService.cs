@@ -1,7 +1,9 @@
 using Application.Interfaces;
+using Application.Mappers;
 using Contracts.Tasks;
 using Contracts.TodoLists;
 using Contracts.Users;
+using Core.Entities.Task;
 using Core.Entities.TodoList;
 using Core.Enums;
 using Core.Interfaces;
@@ -31,16 +33,14 @@ public class TodoListService : ITodoListService
         }
 
         return accessibleLists
-            .Select(l => MapToWebApiModel(l, currentUserId))
-            .ToList();
+            .Select(l => l.ToDto(currentUserId)).ToList();
     }
 
     public async Task<IEnumerable<TodoListDto>> GetByUserAsync(int userId)
     {
         var entities = await this.repository.GetByUserIdAsync(userId);
         return entities
-            .Select(l => MapToWebApiModel(l, userId))
-            .ToList();
+            .Select(l => l.ToDto(userId)).ToList();
     }
 
     public async Task<TodoListDto?> GetByIdAsync(int listId, int currentUserId)
@@ -52,7 +52,7 @@ public class TodoListService : ITodoListService
         }
 
         var entity = await this.repository.GetByIdAsync(listId);
-        return entity == null ? null : MapToWebApiModel(entity, currentUserId);
+        return entity?.ToDto(currentUserId) ?? null;
     }
 
     public async Task<IEnumerable<TaskDto>> GetTasksByListIdAsync(int listId, int currentUserId)
@@ -64,7 +64,8 @@ public class TodoListService : ITodoListService
         }
 
         var tasks = await this.repository.GetTasksByListIdAsync(listId);
-        return tasks.Select(MapTaskToWebApiModel).ToList();
+
+        return tasks.Select(l => l.ToDto()).ToList();
     }
 
     public async Task<TodoListDto> AddAsync(TodoListCreateDto model, int userId)
@@ -80,7 +81,7 @@ public class TodoListService : ITodoListService
 
         var added = await this.repository.AddAsync(entity);
 
-        return MapToWebApiModel(added, userId);
+        return added.ToDto(userId);
     }
 
     public async Task<TodoListDto?> UpdateAsync(int listId, TodoListUpdateDto model, int userId)
@@ -100,7 +101,8 @@ public class TodoListService : ITodoListService
         };
 
         var updated = await this.repository.UpdateAsync(listId, entity);
-        return updated == null ? null : MapToWebApiModel(updated, userId);
+
+        return updated.ToDto(userId);
     }
 
     public async Task<bool> DeleteAsync(int listId, int userId)
@@ -154,54 +156,4 @@ public class TodoListService : ITodoListService
 
     public Task<bool> CanViewAsync(int todoListId, int userId)
         => this.repository.CanViewAsync(todoListId, userId);
-
-    private static TodoListDto MapToWebApiModel(TodoListEntity entity, int userId)
-    {
-        bool canEdit =
-        entity.OwnerId == userId ||
-        entity.AccessList?.Any(a => a.UserId == userId && a.Role == TodoListAccessRole.Editor) == true;
-
-        bool isShared = entity.AccessList?.Count > 0;
-
-        return new TodoListDto
-        {
-            Id = entity.Id,
-            Title = entity.Title,
-            Description = entity.Description,
-            Tasks = entity.Tasks?.Select(MapTaskToWebApiModel).ToList() ?? new List<TaskDto>(),
-            CanEdit = canEdit,
-            IsShared = isShared,
-            AccessList = entity.AccessList != null && entity.AccessList.Count != 0
-            ? entity.AccessList
-                .Select(a => new TodoListAccessDto
-                {
-                    UserName = a.User?.UserName ?? "Unknown",
-                    Role = a.Role.ToString()
-                })
-                .ToList()
-            : new List<TodoListAccessDto>(),
-            OwnerName = entity.Owner?.UserName ?? "Unknown"
-        };
-    }
-
-    private static TaskDto MapTaskToWebApiModel(Core.Entities.Task.TaskEntity task)
-        => new()
-        {
-            Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            CreatedAt = task.CreatedAt,
-            DueDate = task.DueDate,
-            Status = task.Status,
-            Assignee = task.Assignee == null
-                ? null
-                : new UserDto
-                {
-                    Id = task.Assignee.Id,
-                    Email = task.Assignee.Email,
-                    Role = task.Assignee.Role,
-                    UserName = task.Assignee.UserName
-                },
-            TodoListId = task.TodoListId,
-        };
 }

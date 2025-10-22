@@ -24,94 +24,75 @@ public class TaskController : ControllerBase
     public async Task<ActionResult<IEnumerable<TaskDto>>> GetAll()
     {
         var userId = this.GetUserId();
-        var lists = await this.taskService.GetAllAsync(userId);
-        return this.Ok(lists);
+        var tasks = await this.taskService.GetAllAsync(userId);
+        return this.Ok(tasks);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<TaskDto>> Details(int id)
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<TaskDto>> GetById(int id)
     {
         var userId = this.GetUserId();
+        var task = await this.taskService.GetTaskByIdAsync(id, userId);
+        if (task is null)
+        {
+            throw new KeyNotFoundException("Task not found.");
+        }
 
-        TaskDto? task = await this.taskService.GetTaskByIdAsync(id, userId);
-
-        return task == null ? this.NotFound() : this.Ok(task);
+        return this.Ok(task);
     }
 
-    [HttpPost("{todoListId}/tasks")]
-    public async Task<ActionResult<TaskCreateDto>> AddTask(int todoListId, [FromBody] TaskCreateDto model)
+    [HttpPost("{todoListId:int}/tasks")]
+    public async Task<ActionResult<TaskDto>> AddTask(int todoListId, [FromBody] TaskCreateDto model)
     {
+        if (model is null || !this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
         var userId = this.GetUserId();
-
-        try
-        {
-            var task = await this.taskService.AddTaskAsync(todoListId, model, userId);
-
-            var responce = new TaskCreateDto()
-            {
-                Description = task.Description,
-                DueDate = task.DueDate,
-                Title = task.Title,
-            };
-
-            return this.CreatedAtAction(nameof(this.Details), new { id = task.Id }, responce);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+        var created = await this.taskService.AddTaskAsync(todoListId, model, userId);
+        return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, created);
     }
 
-    [HttpPost("{taskId}/tags")]
+    [HttpPost("{taskId:int}/tags")]
     public async Task<ActionResult<IEnumerable<TagDto>>> AddTag(int taskId, [FromBody] TagCreateDto model)
     {
+        if (model is null || string.IsNullOrWhiteSpace(model.Name))
+        {
+            return this.BadRequest("Tag name is required.");
+        }
+
         var userId = this.GetUserId();
-
-        try
+        var success = await this.taskService.AddTagAsync(taskId, model.Name, userId);
+        if (!success)
         {
-            var success = await this.taskService.AddTagAsync(taskId, model.Name, userId);
-            if (!success)
-            {
-                return this.NotFound("Task not found or tag could not be added.");
-            }
+            throw new KeyNotFoundException("Task not found or tag could not be added.");
+        }
 
-            var updatedTask = await this.taskService.GetTaskByIdAsync(taskId, userId);
-            return this.Ok(updatedTask?.Tags ?? new List<TagDto>());
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+        var updatedTask = await this.taskService.GetTaskByIdAsync(taskId, userId);
+        return this.Ok(updatedTask?.Tags ?? new List<TagDto>());
     }
 
-    [HttpDelete("{taskId}/tags")]
+    [HttpDelete("{taskId:int}/tags")]
     public async Task<IActionResult> RemoveTag(int taskId, [FromBody] TagCreateDto model)
     {
+        if (model is null || string.IsNullOrWhiteSpace(model.Name))
+        {
+            return this.BadRequest("Tag name is required.");
+        }
+
         var userId = this.GetUserId();
-
-        try
+        var success = await this.taskService.RemoveTagAsync(taskId, model.Name, userId);
+        if (!success)
         {
-            if (model == null)
-            {
-                return this.BadRequest("Model is null");
-            }
-
-            var success = await this.taskService.RemoveTagAsync(taskId, model.Name, userId);
-            if (!success)
-            {
-                return this.NotFound("Task not found or tag could not be added.");
-            }
-
-            return this.Ok();
+            throw new KeyNotFoundException("Task not found or tag could not be removed.");
         }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+
+        return this.Ok();
     }
 
     [HttpGet("tags")]
-    public async Task<IActionResult> GetTags()
+    public async Task<ActionResult<IEnumerable<TagDto>>> GetTags()
     {
         var userId = this.GetUserId();
         var tags = await this.taskService.GetTagsForUserAsync(userId);
@@ -119,89 +100,83 @@ public class TaskController : ControllerBase
     }
 
     [HttpGet("tag/{tagName}")]
-    public async Task<IActionResult> TasksByTag(string tagName)
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetByTag(string tagName)
     {
+        if (string.IsNullOrWhiteSpace(tagName))
+        {
+            return this.BadRequest("Tag name is required.");
+        }
+
         var userId = this.GetUserId();
         var tasks = await this.taskService.GetTasksByTagAsync(tagName, userId);
         return this.Ok(tasks);
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<TaskEditDto>> EditTask(int id, [FromBody] TaskEditDto model)
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<TaskDto>> Update(int id, [FromBody] TaskEditDto model)
     {
+        if (model is null || !this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
         var userId = this.GetUserId();
-
-        try
+        var updated = await this.taskService.UpdateTaskAsync(id, model, userId);
+        if (updated is null)
         {
-            var updated = await this.taskService.UpdateTaskAsync(id, model, userId);
-
-            if (model == null)
-            {
-                return this.BadRequest("Model is null");
-            }
-
-            if (updated == null)
-            {
-                return this.NotFound();
-            }
-
-            var responce = new TaskEditDto()
-            {
-                Description = updated.Description,
-                DueDate = updated.DueDate,
-                Title = updated.Title,
-                Status = updated.Status,
-                AssigneeName = model.AssigneeName,
-            };
-
-            return this.Ok(responce);
+            throw new KeyNotFoundException("Task not found.");
         }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+
+        return this.Ok(updated);
     }
 
-    [HttpPost("{id}/status")]
+    [HttpPost("{id:int}/status")]
     public async Task<IActionResult> ChangeStatus(int id, [FromBody] ChangeStatusDto dto)
     {
-        var userId = this.GetUserId();
+        if (dto is null)
+        {
+            return this.BadRequest("Status data is required.");
+        }
 
-        try
+        var userId = this.GetUserId();
+        var changed = await this.taskService.ChangeStatusAsync(id, userId, dto);
+        if (!changed)
         {
-            var changed = await this.taskService.ChangeStatusAsync(id, userId, dto);
-            return changed ? this.Ok(new { success = true }) : this.NotFound();
+            throw new KeyNotFoundException("Task not found.");
         }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+
+        return this.Ok();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTask(int id)
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
     {
         var userId = this.GetUserId();
+        var deleted = await this.taskService.DeleteTaskAsync(id, userId);
+        if (!deleted)
+        {
+            throw new KeyNotFoundException("Task not found.");
+        }
 
-        try
-        {
-            var deleted = await this.taskService.DeleteTaskAsync(id, userId);
-            return deleted ? this.Ok(new { success = true }) : this.NotFound();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+        return this.Ok();
     }
 
     [HttpGet("assigned")]
-    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAssignedTasksAsync([FromQuery] TaskStatus? status = TaskStatus.InProgress)
+    public async Task<ActionResult<IEnumerable<TaskDto>>> GetAssigned([FromQuery] TaskStatus? status = null)
     {
         var userId = this.GetUserId();
-        var lists = await this.taskService.GetAssignedTasksAsync(userId, status);
-        return this.Ok(lists);
+        var tasks = await this.taskService.GetAssignedTasksAsync(userId, status);
+        return this.Ok(tasks);
     }
 
-    private int GetUserId() =>
-                int.Parse(this.User.FindFirstValue(ClaimTypes.NameIdentifier)!, CultureInfo.InvariantCulture);
+    private int GetUserId()
+    {
+        var idClaim = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(idClaim, NumberStyles.Integer, CultureInfo.InvariantCulture, out var userId))
+        {
+            throw new UnauthorizedAccessException("User is not authenticated.");
+        }
+
+        return userId;
+    }
 }

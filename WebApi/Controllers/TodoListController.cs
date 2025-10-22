@@ -38,165 +38,131 @@ public class TodoListController : ControllerBase
         return this.Ok(lists);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<TodoListDto>> GetById(int id)
     {
         var userId = this.GetUserId();
+        var list = await this.service.GetByIdAsync(id, userId);
+        if (list is null)
+        {
+            throw new KeyNotFoundException("Todo list not found.");
+        }
 
-        try
-        {
-            var list = await this.service.GetByIdAsync(id, userId);
-            return list == null ? this.NotFound() : this.Ok(list);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+        return this.Ok(list);
     }
 
-    [HttpGet("{id}/tasks")]
+    [HttpGet("{id:int}/tasks")]
     public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasks(int id)
     {
         var userId = this.GetUserId();
-
-        try
-        {
-            var tasks = await this.service.GetTasksByListIdAsync(id, userId);
-            return this.Ok(tasks);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+        var tasks = await this.service.GetTasksByListIdAsync(id, userId);
+        return this.Ok(tasks);
     }
 
     [HttpPost]
     public async Task<ActionResult<TodoListCreateDto>> Add([FromBody] TodoListCreateDto model)
     {
+        if (model is null || !this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
         var userId = this.GetUserId();
         var created = await this.service.AddAsync(model, userId);
 
-        var responce = new TodoListCreateDto()
+        return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, new TodoListCreateDto
         {
-            Description = created.Description,
             Title = created.Title,
-        };
-
-        return this.CreatedAtAction(nameof(this.GetById), new { id = created.Id }, responce);
+            Description = created.Description,
+        });
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<ActionResult<TodoListUpdateDto>> Update(int id, [FromBody] TodoListUpdateDto model)
     {
+        if (model is null || !this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
         var userId = this.GetUserId();
+        var updated = await this.service.UpdateAsync(id, model, userId);
 
-        try
+        if (updated is null)
         {
-            var updated = await this.service.UpdateAsync(id, model, userId);
-
-            if (updated == null)
-            {
-                return this.NotFound();
-            }
-
-            var responce = new TodoListCreateDto()
-            {
-                Description = updated.Description,
-                Title = updated.Title,
-            };
-
-            return this.Ok(responce);
+            throw new KeyNotFoundException("Todo list not found.");
         }
-        catch (UnauthorizedAccessException)
+
+        return this.Ok(new TodoListCreateDto
         {
-            return this.Forbid();
-        }
+            Title = updated.Title,
+            Description = updated.Description,
+        });
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         var userId = this.GetUserId();
+        var deleted = await this.service.DeleteAsync(id, userId);
+        if (!deleted)
+        {
+            throw new KeyNotFoundException("Todo list not found.");
+        }
 
-        try
-        {
-            var deleted = await this.service.DeleteAsync(id, userId);
-            return deleted ? this.Ok() : this.NotFound();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
+        return this.Ok();
     }
 
-    [HttpPost("{id}/share")]
+    [HttpPost("{id:int}/share")]
     public async Task<IActionResult> Share(int id, [FromBody] ShareDto model)
     {
-        var userId = this.GetUserId();
-
         ArgumentNullException.ThrowIfNull(model);
 
+        var userId = this.GetUserId();
         var targetUser = await this.userService.GetUserByNameAsync(model.UserName);
-        if (targetUser == null)
+        if (targetUser is null)
         {
-            return this.NotFound("User not found");
+            throw new KeyNotFoundException("User not found.");
         }
 
-        try
+        var success = await this.service.ShareAsync(id, targetUser.Id, model.Role, userId);
+        if (!success)
         {
-            var success = await this.service.ShareAsync(id, targetUser.Id, model.Role, userId);
-            return success ? this.Ok() : this.BadRequest("Failed to share the list.");
+            throw new InvalidOperationException("Failed to share the list.");
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            return this.Forbid();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return this.BadRequest(ex.Message);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return this.NotFound(ex.Message);
-        }
+
+        return this.Ok();
     }
 
-    [HttpPost("{id}/revoke")]
+    [HttpPost("{id:int}/revoke")]
     public async Task<IActionResult> Revoke(int id, [FromBody] RevokeDto model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
         var userId = this.GetUserId();
-        var user = await this.userService.GetUserByNameAsync(model.UserName);
-        if (user == null)
+        var targetUser = await this.userService.GetUserByNameAsync(model.UserName);
+        if (targetUser is null)
         {
-            return this.NotFound("User not found");
+            throw new KeyNotFoundException("User not found.");
         }
 
-        try
+        var success = await this.service.RevokeAccessAsync(id, targetUser.Id, userId);
+        if (!success)
         {
-            var success = await this.service.RevokeAccessAsync(id, user.Id, userId);
-            return success ? this.Ok() : this.NotFound();
+            throw new KeyNotFoundException("Failed to revoke access.");
         }
-        catch (UnauthorizedAccessException)
-        {
-            return this.Forbid();
-        }
-        catch (KeyNotFoundException)
-        {
-            return this.NotFound();
-        }
+
+        return this.Ok();
     }
 
     private int GetUserId()
     {
-        var id = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrEmpty(id))
+        var idClaim = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(idClaim, NumberStyles.Integer, CultureInfo.InvariantCulture, out var userId))
         {
-            throw new UnauthorizedAccessException("User not authenticated");
+            throw new UnauthorizedAccessException("User is not authenticated.");
         }
 
-        return int.Parse(id, CultureInfo.InvariantCulture);
+        return userId;
     }
 }

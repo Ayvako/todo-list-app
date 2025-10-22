@@ -113,7 +113,7 @@ public class TaskController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int id, string? returnUrl)
     {
         if (!this.ModelState.IsValid)
         {
@@ -121,7 +121,13 @@ public class TaskController : Controller
         }
 
         _ = await this.taskService.DeleteTaskAsync(id);
-        return this.RedirectToAction("Details", "TodoList");
+
+        if (!string.IsNullOrEmpty(returnUrl))
+        {
+            return this.Redirect(returnUrl);
+        }
+
+        return this.RedirectToAction("Index");
     }
 
     [HttpGet]

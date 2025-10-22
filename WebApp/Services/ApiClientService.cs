@@ -47,6 +47,11 @@ namespace WebApp.Services
 
                 if (response.IsSuccessStatusCode)
                 {
+                    if (response.Content.Headers.ContentLength == 0)
+                    {
+                        return new ApiResult<T> { Success = true };
+                    }
+
                     var data = await response.Content.ReadFromJsonAsync<T>(this.jsonOptions);
                     return new ApiResult<T> { Success = true, Data = data };
                 }

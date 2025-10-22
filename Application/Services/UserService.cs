@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Application.Interfaces;
+using Application.Mappers;
 using Contracts.Users;
 using Core.Entities.TodoUser;
 using Core.Enums;
@@ -20,19 +21,19 @@ public class UserService : IUserService
     public async Task<UserDto?> GetByIdAsync(int id)
     {
         var user = await this.userRepository.GetByIdAsync(id);
-        return user == null ? null : MapToDto(user);
+        return user?.ToDto() ?? null;
     }
 
     public async Task<IEnumerable<UserDto>> GetAllAsync()
     {
         var entities = await this.userRepository.GetAllAsync();
-        return entities.Select(u => MapToDto(u)).ToList() ?? new List<UserDto>();
+        return entities.Select(u => u.ToDto()).ToList() ?? new List<UserDto>();
     }
 
     public async Task<UserDto?> GetUserByNameAsync(string username)
     {
         var user = await this.userRepository.GetUserByNameAsync(username);
-        return user == null ? null : MapToDto(user);
+        return user?.ToDto() ?? null;
     }
 
     public async Task<UserDto?> RegisterAsync(string username, string email, string password)
@@ -47,7 +48,8 @@ public class UserService : IUserService
         };
 
         var createdUser = await this.userRepository.RegisterAsync(user);
-        return createdUser == null ? null : MapToDto(createdUser);
+
+        return createdUser?.ToDto() ?? null;
     }
 
     public async Task<UserDto?> LoginAsync(string email, string password)
@@ -60,7 +62,7 @@ public class UserService : IUserService
             return null;
         }
 
-        return MapToDto(user);
+        return user.ToDto();
     }
 
     public async Task SendPasswordResetAsync(string email)
@@ -97,15 +99,6 @@ public class UserService : IUserService
         _ = await this.userRepository.UpdateAsync(user);
         return true;
     }
-
-    private static UserDto MapToDto(UserEntity entity) => new()
-    {
-        Id = entity.Id,
-        UserName = entity.UserName,
-        Email = entity.Email,
-        Role = entity.Role,
-        TokenVersion = entity.TokenVersion,
-    };
 
     private static string HashPassword(string password)
     {
