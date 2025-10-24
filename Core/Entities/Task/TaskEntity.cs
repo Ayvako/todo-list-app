@@ -1,7 +1,6 @@
 using Core.Entities.Comment;
 using Core.Entities.Tag;
 using Core.Entities.TodoList;
-using Core.Entities.TodoUser;
 using TaskStatus = Core.Enums.TaskStatus;
 
 namespace Core.Entities.Task;
@@ -21,8 +20,6 @@ public class TaskEntity
     public TaskStatus Status { get; set; } = TaskStatus.NotStarted;
 
     public int? AssigneeId { get; set; }
-
-    public UserEntity? Assignee { get; set; }
 
     public int TodoListId { get; set; }
 

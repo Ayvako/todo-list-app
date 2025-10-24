@@ -147,6 +147,6 @@ public class TodoListController : Controller
         }
 
         var success = await this.service.RevokeAsync(model);
-        return success ? this.RedirectToAction("Index") : this.NotFound();
+        return this.RedirectToAction("Index");
     }
 }

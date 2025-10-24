@@ -30,18 +30,18 @@ public class UserWebApiService : IUserWebApiService
         return null;
     }
 
-    public async Task<UserRegisterResponseModel?> RegisterAsync(UserRegisterModel model)
+    public async Task<bool> RegisterAsync(UserRegisterModel model)
     {
-        var result = await this.apiClientService.TryRequestAsync<UserRegisterResponseModel>(
+        var result = await this.apiClientService.TryRequestAsync<object>(
             () => this.httpClient.PostAsJsonAsync("api/User/register", model));
 
         if (result.Success && result.Data != null)
         {
-            return result.Data;
+            return result.Success;
         }
 
         Console.WriteLine($"Registration error: {result.ErrorMessage}");
-        return null;
+        return false;
     }
 
     public async Task<bool> ForgotPasswordAsync(ForgotPasswordModel model)

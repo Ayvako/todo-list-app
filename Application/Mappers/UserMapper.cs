@@ -10,7 +10,5 @@ public static class UserMapper
         Id = entity.Id,
         UserName = entity.UserName,
         Email = entity.Email,
-        Role = entity.Role,
-        TokenVersion = entity.TokenVersion,
     };
 }

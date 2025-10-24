@@ -21,7 +21,6 @@ public class TaskRepository : ITaskRepository
         return await this.db.Tasks
             .Include(t => t.Tags)
             .Include(t => t.Comments)
-            .Include(t => t.Assignee)
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id);
     }
@@ -31,10 +30,8 @@ public class TaskRepository : ITaskRepository
         var tasks = await this.GetAllAsync(userId);
         if (status.HasValue)
         {
-            tasks = tasks.Where(t => t.Status == status.Value && t.Assignee.Id == userId).ToList();
+            tasks = tasks.Where(t => t.Status == status.Value && t.AssigneeId == userId).ToList();
         }
-        status ??= TaskStatus.NotStarted;
-
         return tasks;
     }
 
@@ -42,10 +39,7 @@ public class TaskRepository : ITaskRepository
     {
         return await this.db.Tasks
             .Include(t => t.TodoList)
-                .ThenInclude(l => l.Owner)
-            .Include(t => t.TodoList)
                 .ThenInclude(l => l.AccessList)
-            .Include(t => t.Assignee)
             .Include(t => t.Tags)
             .Include(t => t.Comments)
             .AsNoTracking()
@@ -130,8 +124,9 @@ public class TaskRepository : ITaskRepository
                 (t.TodoList.OwnerId == userId ||
                  t.TodoList.AccessList.Any(a => a.UserId == userId))
                 && t.Tags.Any(tag => tag.Name == tagName))
-            .Include(t => t.Assignee)
             .Include(t => t.Tags)
+            .Include(t => t.Comments)
+            .AsNoTracking()
             .ToListAsync();
     }
 }

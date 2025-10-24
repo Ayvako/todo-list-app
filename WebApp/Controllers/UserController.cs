@@ -58,7 +58,7 @@ public class UserController : Controller
 
         var response = await this.userService.RegisterAsync(model);
 
-        if (response == null)
+        if (!response)
         {
             this.ModelState.AddModelError(string.Empty, "Registration error. Check your details or use a different email.");
             return this.View(model);

@@ -2,8 +2,6 @@ using Application.Interfaces;
 using Application.Mappers;
 using Contracts.Tasks;
 using Contracts.TodoLists;
-using Contracts.Users;
-using Core.Entities.Task;
 using Core.Entities.TodoList;
 using Core.Enums;
 using Core.Interfaces;
@@ -13,10 +11,12 @@ namespace Application.Services;
 public class TodoListService : ITodoListService
 {
     private readonly ITodoListRepository repository;
+    private readonly IUserService userService;
 
-    public TodoListService(ITodoListRepository repository)
+    public TodoListService(ITodoListRepository repository, IUserService userService)
     {
         this.repository = repository;
+        this.userService = userService;
     }
 
     public async Task<IEnumerable<TodoListDto>> GetAllAsync(int currentUserId)
@@ -32,15 +32,24 @@ public class TodoListService : ITodoListService
             }
         }
 
-        return accessibleLists
-            .Select(l => l.ToDto(currentUserId)).ToList();
+        var result = new List<TodoListDto>();
+        foreach (var list in accessibleLists)
+        {
+            result.Add(await list.ToDtoAsync(currentUserId, this.userService));
+        }
+
+        return result;
     }
 
     public async Task<IEnumerable<TodoListDto>> GetByUserAsync(int userId)
     {
         var entities = await this.repository.GetByUserIdAsync(userId);
-        return entities
-            .Select(l => l.ToDto(userId)).ToList();
+        var result = new List<TodoListDto>();
+        foreach (var list in entities)
+        {
+            result.Add(await list.ToDtoAsync(userId, this.userService));
+        }
+        return result;
     }
 
     public async Task<TodoListDto?> GetByIdAsync(int listId, int currentUserId)
@@ -52,7 +61,7 @@ public class TodoListService : ITodoListService
         }
 
         var entity = await this.repository.GetByIdAsync(listId);
-        return entity?.ToDto(currentUserId) ?? null;
+        return entity == null ? null : await entity.ToDtoAsync(currentUserId, this.userService);
     }
 
     public async Task<IEnumerable<TaskDto>> GetTasksByListIdAsync(int listId, int currentUserId)
@@ -64,8 +73,13 @@ public class TodoListService : ITodoListService
         }
 
         var tasks = await this.repository.GetTasksByListIdAsync(listId);
+        var result = new List<TaskDto>();
+        foreach (var t in tasks)
+        {
+            result.Add(await t.ToDtoAsync(this.userService));
+        }
 
-        return tasks.Select(l => l.ToDto()).ToList();
+        return result;
     }
 
     public async Task<TodoListDto> AddAsync(TodoListCreateDto model, int userId)
@@ -80,8 +94,7 @@ public class TodoListService : ITodoListService
         };
 
         var added = await this.repository.AddAsync(entity);
-
-        return added.ToDto(userId);
+        return await added.ToDtoAsync(userId, this.userService);
     }
 
     public async Task<TodoListDto?> UpdateAsync(int listId, TodoListUpdateDto model, int userId)
@@ -101,8 +114,7 @@ public class TodoListService : ITodoListService
         };
 
         var updated = await this.repository.UpdateAsync(listId, entity);
-
-        return updated.ToDto(userId);
+        return await updated.ToDtoAsync(userId, this.userService);
     }
 
     public async Task<bool> DeleteAsync(int listId, int userId)

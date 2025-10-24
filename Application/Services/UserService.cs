@@ -1,109 +1,83 @@
-using System.Security.Cryptography;
-using System.Text;
 using Application.Interfaces;
 using Application.Mappers;
 using Contracts.Users;
 using Core.Entities.TodoUser;
-using Core.Enums;
-using Core.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services;
 
 public class UserService : IUserService
 {
-    private readonly IUserRepository userRepository;
+    private readonly UserManager<UserEntity> userManager;
+    private readonly SignInManager<UserEntity> signInManager;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(UserManager<UserEntity> userManager, SignInManager<UserEntity> signInManager)
     {
-        this.userRepository = userRepository;
+        this.userManager = userManager;
+        this.signInManager = signInManager;
     }
 
     public async Task<UserDto?> GetByIdAsync(int id)
     {
-        var user = await this.userRepository.GetByIdAsync(id);
-        return user?.ToDto() ?? null;
-    }
-
-    public async Task<IEnumerable<UserDto>> GetAllAsync()
-    {
-        var entities = await this.userRepository.GetAllAsync();
-        return entities.Select(u => u.ToDto()).ToList() ?? new List<UserDto>();
+        var user = await this.userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        return user == null ? null : user.ToDto();
     }
 
     public async Task<UserDto?> GetUserByNameAsync(string username)
     {
-        var user = await this.userRepository.GetUserByNameAsync(username);
-        return user?.ToDto() ?? null;
+        var user = await this.userManager.Users.FirstOrDefaultAsync(u => u.UserName == username);
+        return user?.ToDto();
+    }
+
+    public async Task<IEnumerable<UserDto>> GetAllAsync()
+    {
+        return await this.userManager.Users.Select(u => u.ToDto()).ToListAsync();
     }
 
     public async Task<UserDto?> RegisterAsync(string username, string email, string password)
     {
-        var hashed = HashPassword(password);
-        var user = new UserEntity
-        {
-            UserName = username,
-            Email = email,
-            PasswordHash = hashed,
-            Role = UserRole.Authorized
-        };
-
-        var createdUser = await this.userRepository.RegisterAsync(user);
-
-        return createdUser?.ToDto() ?? null;
+        var user = new UserEntity { UserName = username, Email = email };
+        var result = await this.userManager.CreateAsync(user, password);
+        return result.Succeeded ? user.ToDto() : null;
     }
 
     public async Task<UserDto?> LoginAsync(string email, string password)
     {
-        var hashed = HashPassword(password);
-        var user = await this.userRepository.GetByEmailAsync(email);
-
-        if (user == null || user.PasswordHash != hashed)
+        var user = await this.userManager.FindByEmailAsync(email);
+        if (user == null)
         {
             return null;
         }
 
-        return user.ToDto();
+        var result = await this.signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
+        return result.Succeeded ? user.ToDto() : null;
     }
 
     public async Task SendPasswordResetAsync(string email)
     {
-        var user = await this.userRepository.GetByEmailAsync(email);
+        var user = await this.userManager.FindByEmailAsync(email);
         if (user == null)
         {
             return;
         }
 
-        user.ResetToken = Guid.NewGuid().ToString("N");
-        user.ResetTokenExpires = DateTime.UtcNow.AddMinutes(30);
+        _ = await this.userManager.GeneratePasswordResetTokenAsync(user);
 
-        _ = await this.userRepository.UpdateAsync(user);
-
-        // TODO: тут интегрировать EmailService
+        // TODO: интегрировать EmailService
         // await _emailService.SendAsync(user.Email, "Password reset",
-        //    $"Click here to reset: https://yourapp.com/reset-password?token={user.ResetToken}&email={user.Email}");
+        //    $"Click here to reset: https://yourapp.com/reset-password?token={token}&email={user.Email}");
     }
 
     public async Task<bool> ResetPasswordAsync(string email, string token, string newPassword)
     {
-        var user = await this.userRepository.GetByEmailAsync(email);
-        if (user == null || user.ResetToken != token || user.ResetTokenExpires < DateTime.UtcNow)
+        var user = await this.userManager.FindByEmailAsync(email);
+        if (user == null)
         {
             return false;
         }
 
-        user.PasswordHash = HashPassword(newPassword);
-        user.ResetToken = null;
-        user.ResetTokenExpires = null;
-        user.TokenVersion++;
-
-        _ = await this.userRepository.UpdateAsync(user);
-        return true;
-    }
-
-    private static string HashPassword(string password)
-    {
-        var bytes = Encoding.UTF8.GetBytes(password);
-        var hash = SHA256.HashData(bytes);
-        return Convert.ToBase64String(hash);
+        var result = await this.userManager.ResetPasswordAsync(user, token, newPassword);
+        return result.Succeeded;
     }
 }

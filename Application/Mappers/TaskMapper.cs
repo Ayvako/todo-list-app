@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using Contracts.Tags;
 using Contracts.Tasks;
 using Contracts.Users;
@@ -7,8 +8,15 @@ namespace Application.Mappers;
 
 public static class TaskMapper
 {
-    public static TaskDto ToDto(this TaskEntity entity)
-        => new()
+    public static async Task<TaskDto> ToDtoAsync(this TaskEntity entity, IUserService userService)
+    {
+        UserDto? assignee = null;
+        if (entity.AssigneeId.HasValue)
+        {
+            assignee = await userService.GetByIdAsync(entity.AssigneeId.Value);
+        }
+
+        return new()
         {
             Id = entity.Id,
             Title = entity.Title,
@@ -17,19 +25,12 @@ public static class TaskMapper
             DueDate = entity.DueDate,
             Status = entity.Status,
             TodoListId = entity.TodoListId,
-            Assignee = entity.Assignee == null
-                ? null
-                : new UserDto
-                {
-                    Id = entity.Assignee.Id,
-                    Email = entity.Assignee.Email,
-                    Role = entity.Assignee.Role,
-                    UserName = entity.Assignee.UserName
-                },
+            Assignee = assignee,
             Tags = entity.Tags?.Select(t => new TagDto
             {
                 Id = t.Id,
                 Name = t.Name
             }).ToList() ?? new List<TagDto>(),
         };
+    }
 }

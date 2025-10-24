@@ -1,12 +1,16 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using Application.Interfaces;
 using Application.Services;
+using Core.Entities.TodoUser;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -23,10 +27,11 @@ internal static class Program
         var connectionString = builder.Configuration.GetConnectionString("TodoListDb");
         _ = builder.Services.AddDbContext<TodoListDbContext>(options =>
             options.UseSqlServer(connectionString));
+        _ = builder.Services.AddDbContext<UserDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("UserDb")));
 
         _ = builder.Services.AddScoped<ITodoListRepository, TodoListRepository>();
         _ = builder.Services.AddScoped<ITaskRepository, TaskRepository>();
-        _ = builder.Services.AddScoped<IUserRepository, UserRepository>();
         _ = builder.Services.AddScoped<ITagRepository, TagRepository>();
 
         _ = builder.Services.AddScoped<ITodoListService, TodoListService>();
@@ -39,6 +44,17 @@ internal static class Program
         var jwtSettings = builder.Configuration.GetSection("Jwt");
         var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("Jwt:Key not found in config."));
 
+        _ = builder.Services.AddIdentity<UserEntity, IdentityRole<int>>(options =>
+        {
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 6;
+            options.Password.RequiredUniqueChars = 0;
+        })
+            .AddEntityFrameworkStores<UserDbContext>()
+            .AddDefaultTokenProviders();
         _ = builder.Services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -67,25 +83,6 @@ internal static class Program
                     }
 
                     return Task.CompletedTask;
-                },
-                OnTokenValidated = async context =>
-                {
-                    var repo = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                    var principal = context.Principal!;
-                    var id = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-                    var version = principal.FindFirst("TokenVersion")?.Value;
-
-                    if (!int.TryParse(id, out var userId) || !int.TryParse(version, out var tokenVersion))
-                    {
-                        context.Fail("Invalid token claims");
-                        return;
-                    }
-
-                    var user = await repo.GetByIdAsync(userId);
-                    if (user == null || user.TokenVersion != tokenVersion)
-                    {
-                        context.Fail("Token is outdated");
-                    }
                 },
             };
         });

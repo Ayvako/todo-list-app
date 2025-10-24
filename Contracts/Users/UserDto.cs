@@ -1,6 +1,3 @@
-using System.Text.Json.Serialization;
-using Core.Enums;
-
 namespace Contracts.Users;
 
 public class UserDto
@@ -10,9 +7,4 @@ public class UserDto
     public string UserName { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public UserRole Role { get; set; }
-
-    public int TokenVersion { get; set; }
 }
