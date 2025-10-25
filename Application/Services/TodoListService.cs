@@ -84,37 +84,14 @@ public class TodoListService : ITodoListService
 
     public async Task<TodoListDto> AddAsync(TodoListCreateDto model, int userId)
     {
-        ArgumentNullException.ThrowIfNull(model);
-
-        var entity = new TodoListEntity
-        {
-            Title = model.Title,
-            Description = model.Description,
-            OwnerId = userId,
-        };
-
-        var added = await this.repository.AddAsync(entity);
-        return await added.ToDtoAsync(userId, this.userService);
+        ValidateCreateDto(model);
+        return await this.AddInternalAsync(model, userId);
     }
 
     public async Task<TodoListDto?> UpdateAsync(int listId, TodoListUpdateDto model, int userId)
     {
-        ArgumentNullException.ThrowIfNull(model);
-
-        var canEdit = await this.CanEditAsync(listId, userId);
-        if (!canEdit)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to edit this list.");
-        }
-
-        var entity = new TodoListEntity
-        {
-            Title = model.Title,
-            Description = model.Description
-        };
-
-        var updated = await this.repository.UpdateAsync(listId, entity);
-        return await updated.ToDtoAsync(userId, this.userService);
+        ValidateUpdateDto(model);
+        return await this.UpdateInternalAsync(listId, model, userId);
     }
 
     public async Task<bool> DeleteAsync(int listId, int userId)
@@ -168,4 +145,45 @@ public class TodoListService : ITodoListService
 
     public Task<bool> CanViewAsync(int todoListId, int userId)
         => this.repository.CanViewAsync(todoListId, userId);
+
+    private async Task<TodoListDto?> UpdateInternalAsync(int listId, TodoListUpdateDto model, int userId)
+    {
+        var canEdit = await this.CanEditAsync(listId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to edit this list.");
+        }
+
+        var entity = new TodoListEntity
+        {
+            Title = model.Title,
+            Description = model.Description
+        };
+
+        var updated = await this.repository.UpdateAsync(listId, entity);
+        return await updated.ToDtoAsync(userId, this.userService);
+    }
+
+    private async Task<TodoListDto> AddInternalAsync(TodoListCreateDto model, int userId)
+    {
+        var entity = new TodoListEntity
+        {
+            Title = model.Title,
+            Description = model.Description,
+            OwnerId = userId,
+        };
+
+        var added = await this.repository.AddAsync(entity);
+        return await added.ToDtoAsync(userId, this.userService);
+    }
+
+    private static void ValidateCreateDto(TodoListCreateDto model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+    }
+
+    private static void ValidateUpdateDto(TodoListUpdateDto model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+    }
 }

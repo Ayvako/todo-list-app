@@ -9,12 +9,12 @@
 
 <form method="get" asp-action="Index" class="row g-3 align-items-end mb-4">
     <div class="col-md-4">
-        <label class="form-label fw-semibold">Search by Title</label>
+        <label for="searchTitle" class="form-label fw-semibold">Search by Title</label>
         <input type="text" name="searchTitle" value="@ViewBag.SearchTitle" class="form-control" placeholder="Task title..." />
     </div>
 
     <div class="col-md-3">
-        <label class="form-label fw-semibold">Created Within</label>
+        <label for="createdRange" class="form-label fw-semibold">Created Within</label>
         <select name="createdRange" class="form-select">
             <option value="today" selected="@(ViewBag.CreatedRange == "today")">Today</option>
             <option value="week" selected="@(ViewBag.CreatedRange == "week")">Last 7 Days</option>
@@ -25,7 +25,7 @@
     </div>
 
     <div class="col-md-3">
-        <label class="form-label fw-semibold">Due Filter</label>
+        <label for="dueFilter" class="form-label fw-semibold">Due Filter</label>
         <select name="dueFilter" class="form-select">
             <option value="overdue" selected="@(ViewBag.DueFilter == "overdue")">Already Overdue</option>
             <option value="day" selected="@(ViewBag.DueFilter == "day")">Due in 1 Day</option>

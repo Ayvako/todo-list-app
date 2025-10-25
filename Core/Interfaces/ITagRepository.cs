@@ -1,6 +1,6 @@
 using Core.Entities.Tag;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 public interface ITagRepository
 {

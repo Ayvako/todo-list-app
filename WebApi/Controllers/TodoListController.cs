@@ -42,12 +42,7 @@ public class TodoListController : ControllerBase
     public async Task<ActionResult<TodoListDto>> GetById(int id)
     {
         var userId = this.GetUserId();
-        var list = await this.service.GetByIdAsync(id, userId);
-        if (list is null)
-        {
-            throw new KeyNotFoundException("Todo list not found.");
-        }
-
+        var list = await this.service.GetByIdAsync(id, userId) ?? throw new KeyNotFoundException("Todo list not found.");
         return this.Ok(list);
     }
 
@@ -86,13 +81,7 @@ public class TodoListController : ControllerBase
         }
 
         var userId = this.GetUserId();
-        var updated = await this.service.UpdateAsync(id, model, userId);
-
-        if (updated is null)
-        {
-            throw new KeyNotFoundException("Todo list not found.");
-        }
-
+        var updated = await this.service.UpdateAsync(id, model, userId) ?? throw new KeyNotFoundException("Todo list not found.");
         return this.Ok(new TodoListCreateDto
         {
             Title = updated.Title,
@@ -116,40 +105,52 @@ public class TodoListController : ControllerBase
     [HttpPost("{id:int}/share")]
     public async Task<IActionResult> Share(int id, [FromBody] ShareDto model)
     {
-        ArgumentNullException.ThrowIfNull(model);
-
-        var userId = this.GetUserId();
-        var targetUser = await this.userService.GetUserByNameAsync(model.UserName);
-        if (targetUser is null)
-        {
-            throw new KeyNotFoundException("User not found.");
-        }
-
-        var success = await this.service.ShareAsync(id, targetUser.Id, model.Role, userId);
-        if (!success)
-        {
-            throw new InvalidOperationException("Failed to share the list.");
-        }
-
-        return this.Ok();
+        ValidateShareModel(model);
+        return await this.ShareInternalAsync(id, model);
     }
 
     [HttpPost("{id:int}/revoke")]
     public async Task<IActionResult> Revoke(int id, [FromBody] RevokeDto model)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ValidateRevokeModel(model);
+        return await this.RevokeInternalAsync(id, model);
+    }
 
+    private static void ValidateRevokeModel(RevokeDto model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+    }
+
+    private static void ValidateShareModel(ShareDto model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+    }
+
+    private async Task<IActionResult> RevokeInternalAsync(int id, RevokeDto model)
+    {
         var userId = this.GetUserId();
-        var targetUser = await this.userService.GetUserByNameAsync(model.UserName);
-        if (targetUser is null)
-        {
-            throw new KeyNotFoundException("User not found.");
-        }
+        var targetUser = await this.userService.GetUserByNameAsync(model.UserName)
+                         ?? throw new KeyNotFoundException("User not found.");
 
         var success = await this.service.RevokeAccessAsync(id, targetUser.Id, userId);
         if (!success)
         {
             throw new KeyNotFoundException("Failed to revoke access.");
+        }
+
+        return this.Ok();
+    }
+
+    private async Task<IActionResult> ShareInternalAsync(int id, ShareDto model)
+    {
+        var userId = this.GetUserId();
+        var targetUser = await this.userService.GetUserByNameAsync(model.UserName)
+                         ?? throw new KeyNotFoundException("User not found.");
+
+        var success = await this.service.ShareAsync(id, targetUser.Id, model.Role, userId);
+        if (!success)
+        {
+            throw new InvalidOperationException("Failed to share the list.");
         }
 
         return this.Ok();

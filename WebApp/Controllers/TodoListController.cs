@@ -131,7 +131,7 @@ public class TodoListController : Controller
         var success = await this.service.ShareAsync(model);
         if (!success)
         {
-            this.TempData["Error"] = "User already has access.";
+            this.TempData["Error"] = "Error sharing.";
         }
 
         return this.RedirectToAction("Index");
@@ -146,7 +146,7 @@ public class TodoListController : Controller
             return this.BadRequest("Invalid request");
         }
 
-        var success = await this.service.RevokeAsync(model);
+        _ = await this.service.RevokeAsync(model);
         return this.RedirectToAction("Index");
     }
 }

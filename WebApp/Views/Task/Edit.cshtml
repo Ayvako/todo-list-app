@@ -12,37 +12,38 @@
     <input type="hidden" asp-for="Id" />
 
     <div class="mb-3">
-        <label asp-for="Title" class="form-label"></label>
-        <input asp-for="Title" class="form-control" />
+        <label for="Title" class="form-label">Title</label>
+        <input id="Title" name="Title" class="form-control" value="@Model.Title" />
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
+        <label for="Description" class="form-label">Description</label>
+        <textarea id="Description" name="Description" class="form-control">@Model.Description</textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="DueDate" class="form-label"></label>
-        <input asp-for="DueDate" type="date" class="form-control" />
+        <label for="DueDate" class="form-label">Due Date</label>
+        <input id="DueDate" name="DueDate" type="date" class="form-control" value="@Model.DueDate.ToString("yyyy-MM-dd")" />
         <span asp-validation-for="DueDate" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Status" class="form-label"></label>
-        <select asp-for="Status" class="form-select">
-            <option value="NotStarted">Not Started</option>
-            <option value="InProgress">In Progress</option>
-            <option value="Completed">Completed</option>
+        <label for="Status" class="form-label">Status</label>
+        <select id="Status" name="Status" class="form-select">
+            <option value="NotStarted" selected="@(Model.Status == Core.Enums.TaskStatus.NotStarted)">Not Started</option>
+            <option value="InProgress" selected="@(Model.Status == Core.Enums.TaskStatus.InProgress)">In Progress</option>
+            <option value="Completed" selected="@(Model.Status == Core.Enums.TaskStatus.Completed)">Completed</option>
         </select>
     </div>
 
     <div class="mb-3">
-        <label asp-for="AssigneeName" class="form-label"></label>
-        <input asp-for="AssigneeName" class="form-control" />
+        <label for="AssigneeName" class="form-label">Assignee</label>
+        <input id="AssigneeName" name="AssigneeName" class="form-control" value="@Model.AssigneeName" />
         <span asp-validation-for="AssigneeName" class="text-danger"></span>
     </div>
+
 
     <button type="submit" class="btn btn-primary">Save</button>
     <a href="@returnUrl" class="btn btn-secondary">Cancel</a>
@@ -53,7 +54,7 @@
 
     @if (Model.Tags != null && Model.Tags.Any())
     {
-        <label class="form-label">Tags</label>
+        <h6 class="form-label">Tags</h6>
 
         <ul class="list-inline">
             @foreach (var tag in Model.Tags)

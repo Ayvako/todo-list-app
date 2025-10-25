@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
@@ -20,6 +18,11 @@ namespace WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int taskId)
         {
+            if (!this.ModelState.IsValid)
+            {
+                return this.View();
+            }
+
             var comments = await this.commentService.GetCommentsAsync(taskId);
             this.ViewBag.TaskId = taskId;
             return this.View(comments);
@@ -28,6 +31,11 @@ namespace WebApp.Controllers
         [HttpGet]
         public IActionResult Add(int taskId)
         {
+            if (!this.ModelState.IsValid)
+            {
+                return this.View();
+            }
+
             var model = new TaskCommentCreateModel();
             this.ViewBag.TaskId = taskId;
             return this.View(model);
@@ -43,7 +51,6 @@ namespace WebApp.Controllers
                 return this.View(dto);
             }
 
-            var userId = this.GetUserId();
             _ = await this.commentService.AddCommentAsync(taskId, dto);
 
             return this.RedirectToAction("Details", "Task", new { id = taskId });
@@ -52,6 +59,11 @@ namespace WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, int taskId)
         {
+            if (!this.ModelState.IsValid)
+            {
+                return this.View();
+            }
+
             var comments = await this.commentService.GetCommentsAsync(taskId);
             var comment = comments.FirstOrDefault(c => c.Id == id);
             if (comment == null)
@@ -66,6 +78,11 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int taskId, int commentId, TaskCommentUpdateModel dto)
         {
+            if (!this.ModelState.IsValid)
+            {
+                return this.View();
+            }
+
             _ = await this.commentService.UpdateCommentAsync(taskId, commentId, dto);
 
             return this.RedirectToAction("Details", "Task", new { id = taskId });
@@ -75,21 +92,14 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int commentId, int taskId)
         {
-            var userId = this.GetUserId();
+            if (!this.ModelState.IsValid)
+            {
+                return this.View();
+            }
+
             _ = await this.commentService.DeleteCommentAsync(taskId, commentId);
 
             return this.RedirectToAction("Details", "Task", new { id = taskId });
-        }
-
-        private int GetUserId()
-        {
-            var idClaim = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(idClaim, NumberStyles.Integer, CultureInfo.InvariantCulture, out var userId))
-            {
-                throw new UnauthorizedAccessException("User is not authenticated.");
-            }
-
-            return userId;
         }
     }
 }

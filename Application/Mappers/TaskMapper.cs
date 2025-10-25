@@ -8,23 +8,27 @@ namespace Application.Mappers;
 
 public static class TaskMapper
 {
-    public static async Task<TaskDto> ToDtoAsync(this TaskEntity entity, IUserService userService)
+    private static void ValidateParameters(TaskEntity entity, IUserService userService)
     {
         ArgumentNullException.ThrowIfNull(entity);
         ArgumentNullException.ThrowIfNull(userService);
+    }
+
+    public static async Task<TaskDto> ToDtoAsync(this TaskEntity entity, IUserService userService)
+    {
+        ValidateParameters(entity, userService);
 
         UserDto? assignee = null;
         if (entity.AssigneeId.HasValue)
         {
             assignee = await userService.GetByIdAsync(entity.AssigneeId.Value);
         }
-        var сomments = new List<TaskCommentDto>();
 
+        var comments = new List<TaskCommentDto>();
         foreach (var a in entity.Comments)
         {
             var user = await userService.GetByIdAsync(a.UserId);
-
-            сomments.Add(new TaskCommentDto
+            comments.Add(new TaskCommentDto
             {
                 Id = a.Id,
                 CreatedAt = a.CreatedAt,
@@ -36,7 +40,7 @@ public static class TaskMapper
             });
         }
 
-        return new()
+        return new TaskDto
         {
             Id = entity.Id,
             Title = entity.Title,
@@ -46,7 +50,7 @@ public static class TaskMapper
             Status = entity.Status,
             TodoListId = entity.TodoListId,
             Assignee = assignee,
-            Comments = сomments,
+            Comments = comments,
             Tags = entity.Tags?.Select(t => new TagDto
             {
                 Id = t.Id,

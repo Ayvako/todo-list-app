@@ -53,22 +53,8 @@ public class TaskRepository : ITaskRepository
 
     public async Task<TaskEntity> AddTaskAsync(int todoListId, TaskEntity task)
     {
-        ArgumentNullException.ThrowIfNull(task);
-
-        var todoListExists = await this.db.TodoLists.AnyAsync(l => l.Id == todoListId);
-
-        if (!todoListExists)
-        {
-            throw new KeyNotFoundException($"TodoList {todoListId} not found");
-        }
-
-        task.TodoListId = todoListId;
-        task.CreatedAt = DateTime.UtcNow;
-
-        _ = this.db.Tasks.Add(task);
-        _ = await this.db.SaveChangesAsync();
-
-        return task;
+        ValidateTask(task);
+        return await this.AddTaskInternalAsync(todoListId, task);
     }
 
     public async Task<bool> DeleteTaskAsync(int id)
@@ -86,22 +72,8 @@ public class TaskRepository : ITaskRepository
 
     public async Task<TaskEntity?> UpdateTaskAsync(TaskEntity updatedTask)
     {
-        ArgumentNullException.ThrowIfNull(updatedTask);
-
-        var entity = await this.db.Tasks.FindAsync(updatedTask.Id);
-        if (entity == null)
-        {
-            return null;
-        }
-
-        entity.Title = updatedTask.Title;
-        entity.Description = updatedTask.Description;
-        entity.DueDate = updatedTask.DueDate;
-        entity.Status = updatedTask.Status;
-        entity.AssigneeId = updatedTask.AssigneeId;
-
-        _ = await this.db.SaveChangesAsync();
-        return entity;
+        ValidateTask(updatedTask);
+        return await this.UpdateTaskInternalAsync(updatedTask);
     }
 
     public async Task<bool> UpdateStatusAsync(int id, TaskStatus newStatus)
@@ -128,5 +100,45 @@ public class TaskRepository : ITaskRepository
             .Include(t => t.Comments)
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    private async Task<TaskEntity> AddTaskInternalAsync(int todoListId, TaskEntity task)
+    {
+        var todoListExists = await this.db.TodoLists.AnyAsync(l => l.Id == todoListId);
+        if (!todoListExists)
+        {
+            throw new KeyNotFoundException($"TodoList {todoListId} not found");
+        }
+
+        task.TodoListId = todoListId;
+        task.CreatedAt = DateTime.UtcNow;
+
+        _ = this.db.Tasks.Add(task);
+        _ = await this.db.SaveChangesAsync();
+
+        return task;
+    }
+
+    private async Task<TaskEntity?> UpdateTaskInternalAsync(TaskEntity updatedTask)
+    {
+        var entity = await this.db.Tasks.FindAsync(updatedTask.Id);
+        if (entity == null)
+        {
+            return null;
+        }
+
+        entity.Title = updatedTask.Title;
+        entity.Description = updatedTask.Description;
+        entity.DueDate = updatedTask.DueDate;
+        entity.Status = updatedTask.Status;
+        entity.AssigneeId = updatedTask.AssigneeId;
+
+        _ = await this.db.SaveChangesAsync();
+        return entity;
+    }
+
+    private static void ValidateTask(TaskEntity task)
+    {
+        ArgumentNullException.ThrowIfNull(task);
     }
 }

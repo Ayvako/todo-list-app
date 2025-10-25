@@ -33,7 +33,18 @@ public class TaskCommentRepository : ITaskCommentRepository
 
     public async Task<CommentEntity?> UpdateCommentAsync(CommentEntity comment)
     {
-        ArgumentNullException.ThrowIfNull(comment);
+        ValidateComment(comment);
+        return await this.UpdateCommentInternalAsync(comment);
+    }
+
+    public async Task<CommentEntity?> GetByIdAsync(int commentId)
+    {
+        return await this.db.Comments
+            .FirstOrDefaultAsync(c => c.Id == commentId);
+    }
+
+    private async Task<CommentEntity?> UpdateCommentInternalAsync(CommentEntity comment)
+    {
         var entity = await this.db.Comments.FindAsync(comment.Id);
         if (entity != null)
         {
@@ -44,9 +55,8 @@ public class TaskCommentRepository : ITaskCommentRepository
         return entity;
     }
 
-    public async Task<CommentEntity?> GetByIdAsync(int commentId)
+    private static void ValidateComment(CommentEntity comment)
     {
-        return await this.db.Comments
-            .FirstOrDefaultAsync(c => c.Id == commentId);
+        ArgumentNullException.ThrowIfNull(comment);
     }
 }

@@ -21,7 +21,7 @@ public class UserService : IUserService
     public async Task<UserDto?> GetByIdAsync(int id)
     {
         var user = await this.userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
-        return user == null ? null : user.ToDto();
+        return user?.ToDto();
     }
 
     public async Task<Dictionary<int, UserDto>> GetByIdsAsync(IEnumerable<int> userIds)
@@ -78,10 +78,6 @@ public class UserService : IUserService
         }
 
         _ = await this.userManager.GeneratePasswordResetTokenAsync(user);
-
-        // TODO: интегрировать EmailService
-        // await _emailService.SendAsync(user.Email, "Password reset",
-        //    $"Click here to reset: https://yourapp.com/reset-password?token={token}&email={user.Email}");
     }
 
     public async Task<bool> ResetPasswordAsync(string email, string token, string newPassword)

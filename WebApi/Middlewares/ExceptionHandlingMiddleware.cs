@@ -28,8 +28,33 @@ public class ExceptionHandlingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        ArgumentNullException.ThrowIfNull(context);
+        ValidateContext(context);
+        await this.InvokeInternalAsync(context);
+    }
 
+    private static void ValidateContext(HttpContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+    }
+
+    private static async Task WriteErrorAsync(HttpContext context, HttpStatusCode status, string message)
+    {
+        context.Response.ContentType = "application/problem+json";
+        context.Response.StatusCode = (int)status;
+
+        var problem = new
+        {
+            type = $"https://httpstatuses.io/{(int)status}",
+            title = message,
+            status = (int)status,
+            traceId = context.TraceIdentifier,
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+    }
+
+    private async Task InvokeInternalAsync(HttpContext context)
+    {
         try
         {
             await this.next(context);
@@ -54,21 +79,5 @@ public class ExceptionHandlingMiddleware
             DomainExceptionLogger(this.logger, ex.Message, ex);
             await WriteErrorAsync(context, HttpStatusCode.Conflict, ex.Message);
         }
-    }
-
-    private static async Task WriteErrorAsync(HttpContext context, HttpStatusCode status, string message)
-    {
-        context.Response.ContentType = "application/problem+json";
-        context.Response.StatusCode = (int)status;
-
-        var problem = new
-        {
-            type = $"https://httpstatuses.io/{(int)status}",
-            title = message,
-            status = (int)status,
-            traceId = context.TraceIdentifier,
-        };
-
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
     }
 }

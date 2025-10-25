@@ -5,8 +5,6 @@
 
 @{
     ViewData["Title"] = "Assigned Tasks";
-    var user = HttpContextAccessor.HttpContext?.User;
-    var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
     var now = DateTime.UtcNow.ToLocalTime();
 }
 
@@ -22,14 +20,22 @@
             }
         </select>
     </div>
+    @{
+        string nameArrow = "";
+        if (ViewBag.SortBy == "name")
+            nameArrow = ViewBag.SortOrder == "asc" ? "↑" : "↓";
 
+        string dateArrow = "";
+        if (ViewBag.SortBy == "duedate")
+            dateArrow = ViewBag.SortOrder == "asc" ? "↑" : "↓";
+    }
     <div>
-        <label class="form-label fw-semibold me-2">Sort by:</label>
+        <span class="form-label fw-semibold me-2">Sort by:</span>
         <a href="@Url.Action("AssignedTasks", new { status = ViewBag.SelectedStatus, sortBy = "name", sortOrder = ViewBag.SortBy == "name" && ViewBag.SortOrder == "asc" ? "desc" : "asc" })" class="btn btn-outline-primary btn-sm me-1">
-            Task Name @(ViewBag.SortBy == "name" ? (ViewBag.SortOrder == "asc" ? "↑" : "↓") : "")
+            Task Name @nameArrow
         </a>
         <a href="@Url.Action("AssignedTasks", new { status = ViewBag.SelectedStatus, sortBy = "duedate", sortOrder = ViewBag.SortBy == "duedate" && ViewBag.SortOrder == "asc" ? "desc" : "asc" })" class="btn btn-outline-primary btn-sm">
-            Due Date @(ViewBag.SortBy == "duedate" ? (ViewBag.SortOrder == "asc" ? "↑" : "↓") : "")
+            Due Date @dateArrow
         </a>
     </div>
 </form>

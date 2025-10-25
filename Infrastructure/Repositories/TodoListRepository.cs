@@ -76,22 +76,8 @@ public class TodoListRepository : ITodoListRepository
 
     public async Task<TodoListEntity> UpdateAsync(int id, TodoListEntity todoList)
     {
-        ArgumentNullException.ThrowIfNull(todoList);
-
-        var entity = await this.db.TodoLists
-            .Include(l => l.Tasks)
-            .FirstOrDefaultAsync(l => l.Id == id);
-
-        if (entity == null)
-        {
-            return todoList;
-        }
-
-        entity.Title = todoList.Title;
-        entity.Description = todoList.Description;
-
-        _ = await this.db.SaveChangesAsync();
-        return entity;
+        ValidateTodoList(todoList);
+        return await this.UpdateInternalAsync(id, todoList);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -203,5 +189,28 @@ public class TodoListRepository : ITodoListRepository
         access.Role = newRole;
         _ = await this.db.SaveChangesAsync();
         return true;
+    }
+
+    private static void ValidateTodoList(TodoListEntity todoList)
+    {
+        ArgumentNullException.ThrowIfNull(todoList);
+    }
+
+    private async Task<TodoListEntity> UpdateInternalAsync(int id, TodoListEntity todoList)
+    {
+        var entity = await this.db.TodoLists
+            .Include(l => l.Tasks)
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (entity == null)
+        {
+            return todoList;
+        }
+
+        entity.Title = todoList.Title;
+        entity.Description = todoList.Description;
+
+        _ = await this.db.SaveChangesAsync();
+        return entity;
     }
 }

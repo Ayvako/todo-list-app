@@ -8,10 +8,15 @@ namespace Application.Mappers;
 
 public static class TodoListMapper
 {
+    private static void ValidateParameters(TodoListEntity entity, IUserService userService)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+        ArgumentNullException.ThrowIfNull(userService);
+    }
+
     public static async Task<TodoListDto> ToDtoAsync(this TodoListEntity entity, int userId, IUserService userService)
     {
-        ArgumentNullException.ThrowIfNull(userService);
-        ArgumentNullException.ThrowIfNull(entity);
+        ValidateParameters(entity, userService);
 
         bool canEdit =
             entity.OwnerId == userId ||
@@ -20,7 +25,6 @@ public static class TodoListMapper
         bool isShared = entity.AccessList?.Count > 0;
 
         string ownerName = "Unknown";
-
         if (entity.OwnerId != 0)
         {
             var owner = await userService.GetByIdAsync(entity.OwnerId);

@@ -47,7 +47,7 @@ public class TaskCommentService : ITaskCommentService
 
     public async Task<TaskCommentDto> AddCommentAsync(int taskId, int userId, TaskCommentCreateDto dto)
     {
-        ArgumentNullException.ThrowIfNull(dto);
+        ValidateAddCommentParameters(dto);
 
         var entity = new CommentEntity
         {
@@ -56,13 +56,39 @@ public class TaskCommentService : ITaskCommentService
             Text = dto.Text,
         };
 
-        var existing = await this.taskRepository.GetTaskByIdAsync(taskId) ?? throw new KeyNotFoundException("Task not found.");
-        var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
+        return await this.AddCommentInternalAsync(entity, userId);
+    }
 
+    public async Task<TaskCommentDto?> UpdateCommentAsync(int commentId, int userId, TaskCommentUpdateDto dto)
+    {
+        ValidateUpdateCommentParameters(dto);
+
+        return await this.UpdateCommentInternalAsync(commentId, userId, dto);
+    }
+
+    public async Task<bool> DeleteCommentAsync(int commentId, int userId)
+    {
+        var comment = await this.commentRepository.GetByIdAsync(commentId);
+        if (comment == null || comment.UserId != userId)
+        {
+            return false;
+        }
+
+        await this.commentRepository.DeleteCommentAsync(commentId);
+        return true;
+    }
+
+    private async Task<TaskCommentDto> AddCommentInternalAsync(CommentEntity entity, int userId)
+    {
+        var existing = await this.taskRepository.GetTaskByIdAsync(entity.TaskId)
+            ?? throw new KeyNotFoundException("Task not found.");
+
+        var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
         if (!canEdit)
         {
-            throw new UnauthorizedAccessException("You don't have permission to add сomments to this task.");
+            throw new UnauthorizedAccessException("You don't have permission to add comments to this task.");
         }
+
         _ = await this.commentRepository.AddCommentAsync(entity);
 
         var user = await this.userService.GetByIdAsync(userId);
@@ -77,10 +103,8 @@ public class TaskCommentService : ITaskCommentService
         };
     }
 
-    public async Task<TaskCommentDto?> UpdateCommentAsync(int commentId, int userId, TaskCommentUpdateDto dto)
+    private async Task<TaskCommentDto?> UpdateCommentInternalAsync(int commentId, int userId, TaskCommentUpdateDto dto)
     {
-        ArgumentNullException.ThrowIfNull(dto);
-
         var comment = await this.commentRepository.GetByIdAsync(commentId);
         if (comment == null || comment.UserId != userId)
         {
@@ -90,8 +114,8 @@ public class TaskCommentService : ITaskCommentService
         comment.Text = dto.Text;
         comment.UpdatedAt = DateTime.UtcNow;
         _ = await this.commentRepository.UpdateCommentAsync(comment);
-        var user = await this.userService.GetByIdAsync(comment.UserId);
 
+        var user = await this.userService.GetByIdAsync(comment.UserId);
         return new TaskCommentDto
         {
             Id = comment.Id,
@@ -102,15 +126,13 @@ public class TaskCommentService : ITaskCommentService
         };
     }
 
-    public async Task<bool> DeleteCommentAsync(int commentId, int userId)
+    private static void ValidateAddCommentParameters(TaskCommentCreateDto dto)
     {
-        var comment = await this.commentRepository.GetByIdAsync(commentId);
-        if (comment == null || comment.UserId != userId)
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull(dto);
+    }
 
-        await this.commentRepository.DeleteCommentAsync(commentId);
-        return true;
+    private static void ValidateUpdateCommentParameters(TaskCommentUpdateDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
     }
 }

@@ -28,12 +28,7 @@ public class UserController : ControllerBase
             return this.BadRequest(this.ModelState);
         }
 
-        var user = await this.userService.RegisterAsync(model.UserName, model.Email, model.Password);
-        if (user is null)
-        {
-            throw new InvalidOperationException("Failed to register user.");
-        }
-
+        var user = await this.userService.RegisterAsync(model.UserName, model.Email, model.Password) ?? throw new InvalidOperationException("Failed to register user.");
         return this.CreatedAtAction(nameof(this.GetCurrentUser), new { id = user.Id }, new UserRegisterResponseDto
         {
             Id = user.Id,
@@ -47,12 +42,7 @@ public class UserController : ControllerBase
     public async Task<ActionResult<UserResponseDto>> GetCurrentUser()
     {
         var userId = this.GetUserId();
-        var user = await this.userService.GetByIdAsync(userId);
-        if (user is null)
-        {
-            throw new KeyNotFoundException("User not found.");
-        }
-
+        var user = await this.userService.GetByIdAsync(userId) ?? throw new KeyNotFoundException("User not found.");
         return this.Ok(new UserResponseDto
         {
             Id = user.Id,
@@ -69,12 +59,7 @@ public class UserController : ControllerBase
             return this.BadRequest(this.ModelState);
         }
 
-        var user = await this.userService.LoginAsync(model.Email, model.Password);
-        if (user is null)
-        {
-            throw new UnauthorizedAccessException("Invalid credentials.");
-        }
-
+        var user = await this.userService.LoginAsync(model.Email, model.Password) ?? throw new UnauthorizedAccessException("Invalid credentials.");
         var token = this.jwtService.GenerateToken(user);
 
         return this.Ok(new UserLoginResponseDto

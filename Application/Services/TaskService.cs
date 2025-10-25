@@ -22,27 +22,8 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto> AddTaskAsync(int todoListId, TaskCreateDto dto, int userId)
     {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        var canEdit = await this.todoListService.CanEditAsync(todoListId, userId);
-        if (!canEdit)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to add tasks to this list.");
-        }
-        var entity = new TaskEntity
-        {
-            Title = dto.Title,
-            Description = dto.Description,
-            DueDate = dto.DueDate,
-            TodoListId = todoListId,
-            AssigneeId = userId,
-            CreatedAt = DateTime.UtcNow,
-            Status = TaskStatus.NotStarted,
-        };
-
-        var added = await this.repository.AddTaskAsync(todoListId, entity);
-
-        return await this.MapToDtoAsync(added, userId);
+        ValidateTaskCreateDto(dto);
+        return await this.AddTaskInternalAsync(todoListId, dto, userId);
     }
 
     public async Task<TaskDto?> GetTaskByIdAsync(int id, int userId)
@@ -76,28 +57,8 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto?> UpdateTaskAsync(int id, TaskEditDto dto, int userId)
     {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        var existing = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
-
-        var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
-        if (!canEdit)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to edit this task.");
-        }
-        existing.Title = dto.Title;
-        existing.Description = dto.Description;
-        existing.DueDate = dto.DueDate;
-        existing.Status = dto.Status;
-
-        if (!string.IsNullOrEmpty(dto.AssigneeName))
-        {
-            var user = await this.userService.GetUserByNameAsync(dto.AssigneeName);
-            existing.AssigneeId = user?.Id;
-        }
-
-        var updated = await this.repository.UpdateTaskAsync(existing);
-        return updated == null ? null : await this.MapToDtoAsync(updated, userId);
+        ValidateTaskEditDto(dto);
+        return await this.UpdateTaskInternalAsync(id, dto, userId);
     }
 
     public async Task<bool> DeleteTaskAsync(int id, int userId)
@@ -115,18 +76,8 @@ public class TaskService : ITaskService
 
     public async Task<bool> ChangeStatusAsync(int id, int userId, ChangeStatusDto dto)
     {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        var existing = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
-        var isAssignee = existing.AssigneeId == userId;
-        var canEditList = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
-
-        if (!canEditList && !isAssignee)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to change the status of this task.");
-        }
-
-        return await this.repository.UpdateStatusAsync(id, dto.NewStatus);
+        ValidateChangeStatusDto(dto);
+        return await this.ChangeStatusInternalAsync(id, userId, dto);
     }
 
     public async Task<List<TaskDto?>> GetTasksByTagAsync(string tagName, int userId)
@@ -139,6 +90,83 @@ public class TaskService : ITaskService
         }
 
         return list;
+    }
+
+    private async Task<bool> ChangeStatusInternalAsync(int id, int userId, ChangeStatusDto dto)
+    {
+        var existing = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
+        var isAssignee = existing.AssigneeId == userId;
+        var canEditList = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
+
+        if (!canEditList && !isAssignee)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to change the status of this task.");
+        }
+
+        return await this.repository.UpdateStatusAsync(id, dto.NewStatus);
+    }
+
+    private async Task<TaskDto?> UpdateTaskInternalAsync(int id, TaskEditDto dto, int userId)
+    {
+        var existing = await this.repository.GetTaskByIdAsync(id) ?? throw new KeyNotFoundException("Task not found.");
+
+        var canEdit = await this.todoListService.CanEditAsync(existing.TodoListId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to edit this task.");
+        }
+
+        existing.Title = dto.Title;
+        existing.Description = dto.Description;
+        existing.DueDate = dto.DueDate;
+        existing.Status = dto.Status;
+
+        if (!string.IsNullOrEmpty(dto.AssigneeName))
+        {
+            var user = await this.userService.GetUserByNameAsync(dto.AssigneeName);
+            existing.AssigneeId = user?.Id;
+        }
+
+        var updated = await this.repository.UpdateTaskAsync(existing);
+        return updated == null ? null : await this.MapToDtoAsync(updated, userId);
+    }
+
+    private async Task<TaskDto> AddTaskInternalAsync(int todoListId, TaskCreateDto dto, int userId)
+    {
+        var canEdit = await this.todoListService.CanEditAsync(todoListId, userId);
+        if (!canEdit)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to add tasks to this list.");
+        }
+
+        var entity = new TaskEntity
+        {
+            Title = dto.Title,
+            Description = dto.Description,
+            DueDate = dto.DueDate,
+            TodoListId = todoListId,
+            AssigneeId = userId,
+            CreatedAt = DateTime.UtcNow,
+            Status = TaskStatus.NotStarted,
+        };
+
+        var added = await this.repository.AddTaskAsync(todoListId, entity);
+        return await this.MapToDtoAsync(added, userId);
+    }
+
+    private static void ValidateTaskCreateDto(TaskCreateDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+    }
+
+    private static void ValidateTaskEditDto(TaskEditDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+    }
+
+    private static void ValidateChangeStatusDto(ChangeStatusDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
     }
 
     private async Task<TaskDto> MapToDtoAsync(TaskEntity entity, int userId)

@@ -1,7 +1,6 @@
 using Application.Interfaces;
 using Contracts.Tags;
 using Core.Interfaces;
-using Infrastructure.Repositories;
 
 namespace Application.Services;
 

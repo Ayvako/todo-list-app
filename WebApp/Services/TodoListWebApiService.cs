@@ -96,7 +96,7 @@ public class TodoListWebApiService : ITodoListWebApiService
 
     public async Task<bool> ShareAsync(ShareModel model)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ValidateModel(model);
         this.AttachToken();
 
         var response = await this.apiClientService.TryRequestAsync<object>(
@@ -106,12 +106,17 @@ public class TodoListWebApiService : ITodoListWebApiService
 
     public async Task<bool> RevokeAsync(RevokeModel model)
     {
-        ArgumentNullException.ThrowIfNull(model);
-
+        ValidateModel(model);
         this.AttachToken();
+
         var response = await this.apiClientService.TryRequestAsync<object>(
             () => this.httpClient.PostAsJsonAsync($"api/TodoList/{model.TodoListId}/revoke", model));
         return response.Success;
+    }
+
+    private static void ValidateModel(object model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
     }
 
     private void AttachToken()

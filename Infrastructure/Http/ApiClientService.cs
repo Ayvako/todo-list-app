@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
-using WebApp.ApiClient;
 
 namespace Infrastructure.Http
 {
@@ -25,10 +24,14 @@ namespace Infrastructure.Http
 
         public async Task<ApiResult<T>> TryRequestAsync<T>(Func<Task<HttpResponseMessage>> request)
         {
+            ValidateRequest(request);
+            return await this.ExecuteRequestAsync<T>(request);
+        }
+
+        private async Task<ApiResult<T>> ExecuteRequestAsync<T>(Func<Task<HttpResponseMessage>> request)
+        {
             try
             {
-                ArgumentNullException.ThrowIfNull(request);
-
                 var response = await request();
 
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -80,6 +83,11 @@ namespace Infrastructure.Http
             {
                 throw new InvalidOperationException("Error executing request.", ex);
             }
+        }
+
+        private static void ValidateRequest(Func<Task<HttpResponseMessage>> request)
+        {
+            ArgumentNullException.ThrowIfNull(request);
         }
 
         private static string ExtractErrorMessage(string content)

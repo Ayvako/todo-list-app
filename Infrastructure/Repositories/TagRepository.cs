@@ -1,4 +1,5 @@
 using Core.Entities.Tag;
+using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,11 +16,6 @@ public class TagRepository : ITagRepository
 
     public async Task<bool> AddTagAsync(int taskId, string tagName)
     {
-        if (string.IsNullOrWhiteSpace(tagName))
-        {
-            throw new ArgumentException("Tag name cannot be empty.", nameof(tagName));
-        }
-
         var task = await this.db.Tasks
             .Include(t => t.Tags)
             .FirstOrDefaultAsync(t => t.Id == taskId);
