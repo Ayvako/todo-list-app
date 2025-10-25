@@ -1,24 +1,11 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace Contracts.Tasks;
+namespace Contracts.Comments;
 
 public class TaskCommentDto
 {
     public int Id { get; set; }
-
-    [Required]
-    [StringLength(500)]
     public string Text { get; set; } = string.Empty;
-
     public string AuthorName { get; set; } = string.Empty;
-
     public int AuthorId { get; set; }
-
     public DateTime CreatedAt { get; set; }
-
     public DateTime? UpdatedAt { get; set; }
-
-
-    [Required]
-    public int TaskId { get; set; }
 }

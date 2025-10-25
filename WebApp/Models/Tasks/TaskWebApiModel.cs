@@ -1,3 +1,4 @@
+using WebApp.Models.Comments;
 using WebApp.Models.Tags;
 using WebApp.Models.Users;
 using TaskStatus = Core.Enums.TaskStatus;
@@ -27,4 +28,6 @@ public class TaskWebApiModel
     public bool CanEdit { get; set; }
 
     public ICollection<TagModel> Tags { get; set; } = new List<TagModel>();
+
+    public ICollection<TaskCommentModel> Comments { get; set; } = new List<TaskCommentModel>();
 }

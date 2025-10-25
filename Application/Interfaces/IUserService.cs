@@ -14,6 +14,8 @@ public interface IUserService
 
     Task<UserDto?> GetUserByNameAsync(string username);
 
+    Task<Dictionary<int, UserDto>> GetByIdsAsync(IEnumerable<int> userIds);
+
     Task SendPasswordResetAsync(string email);
 
     Task<bool> ResetPasswordAsync(string email, string token, string newPassword);

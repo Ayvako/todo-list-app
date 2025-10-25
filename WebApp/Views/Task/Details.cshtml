@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = $"Task Details - {Model.Title}";
+    int currentUserId = ViewBag.UserId;
 }
 
 <div class="card shadow-sm border-2 mt-4">
@@ -22,7 +23,7 @@
             <dt class="col-sm-3">Due Date:</dt>
             <dd class="col-sm-9">@Model.DueDate.ToLocalTime()</dd>
 
-            @if (!string.IsNullOrEmpty(Model.Assignee.UserName))
+            @if (Model.Assignee != null && !string.IsNullOrEmpty(Model.Assignee.UserName))
             {
                 <dt class="col-sm-3">Assignee:</dt>
                 <dd class="col-sm-9">@Model.Assignee.UserName</dd>
@@ -38,9 +39,100 @@
                     }
                 </dd>
             }
-        </dl>
 
-        <a asp-action="Index" class="btn btn-secondary">← Back to list</a>
+        </dl>
+        <div class="mt-4">
+            <h5 class="mb-3">💬 Comments</h5>
+
+            @if (Model.Comments != null && Model.Comments.Any())
+            {
+                @foreach (var comment in Model.Comments)
+                {
+                    bool canEdit = currentUserId == comment.AuthorId;
+                    bool canDelete = canEdit;
+
+                    <div class="card mb-2 border-1 shadow-sm">
+                        <div class="card-body py-2">
+
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>@comment.AuthorName</strong>
+                                <small class="text-muted">
+                                    @if (comment.UpdatedAt.HasValue && comment.UpdatedAt.Value != comment.CreatedAt)
+                                    {
+                                        <small class="text-muted"
+                                            title="Edited: @comment.UpdatedAt.Value.ToLocalTime().ToString("g")"
+                                            data-bs-toggle="tooltip"
+                                            style="cursor: help;">
+
+                                            @comment.CreatedAt.ToLocalTime().ToString("g") <span class="text-warning">✎</span>
+                                        </small>
+                                            }
+                                    else
+                                    {
+                                        <small class="text-muted">@comment.CreatedAt.ToLocalTime().ToString("g")</small>
+                                    }
+                                </small>
+                            </div>
+
+                    @if (ViewData["EditingCommentId"] as int? == comment.Id && canEdit)
+                            {
+                                <form asp-controller="TaskComment" asp-action="Edit" method="post" class="mt-2">
+                                    <input type="hidden" name="commentId" value="@comment.Id" />
+                                    <input type="hidden" name="taskId" value="@Model.Id" />
+                                    <textarea name="text" class="form-control mb-2" rows="2">@comment.Text</textarea>
+                                    <button type="submit" class="btn btn-sm btn-success me-2">💾 Save</button>
+                                    <a asp-action="Details" asp-controller="Tasks" asp-route-id="@Model.Id"
+                                       class="btn btn-sm btn-secondary">Cancel</a>
+                                </form>
+                            }
+                            else
+                            {
+                                <p class="mb-1">@comment.Text</p>
+
+                                <div class="d-flex gap-2">
+                                    @if (canEdit)
+                                    {
+                                        <a asp-controller="TaskComment"
+                                           asp-action="Edit"
+                                           asp-route-id="@comment.Id"
+                                           asp-route-taskId="@Model.Id"
+                                           class="btn btn-sm btn-outline-primary">✏️ Edit</a>
+                                    }
+                                    @if (canDelete)
+                                    {
+                                        <form asp-controller="TaskComment" asp-action="Delete" method="post"
+                                              onsubmit="return confirm('Delete this comment?');">
+                                            <input type="hidden" name="commentId" value="@comment.Id" />
+                                            <input type="hidden" name="taskId" value="@Model.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Delete</button>
+                                        </form>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+            }
+            else
+            {
+                <p class="text-muted fst-italic">No comments yet.</p>
+            }
+
+
+            <form asp-controller="TaskComment" asp-action="Add" method="post" class="mt-3">
+                <input type="hidden" name="taskId" value="@Model.Id" />
+                <div class="mb-2">
+                    <textarea name="text" class="form-control" rows="2" placeholder="Add a comment..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Comment</button>
+            </form>
+        </div>
+
+
+        <div class="mt-4">
+            <a asp-action="Index" class="btn btn-secondary">← Back to list</a>
+        </div>
     </div>
 </div>
 

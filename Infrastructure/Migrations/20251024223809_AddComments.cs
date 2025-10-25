@@ -5,22 +5,16 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddResetTokenToUser : Migration
+    public partial class AddComments : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             ArgumentNullException.ThrowIfNull(migrationBuilder);
 
-            _ = migrationBuilder.AddColumn<string>(
-                name: "ResetToken",
-                table: "Users",
-                type: "nvarchar(max)",
-                nullable: true);
-
             _ = migrationBuilder.AddColumn<DateTime>(
-                name: "ResetTokenExpires",
-                table: "Users",
+                name: "UpdatedAt",
+                table: "Comments",
                 type: "datetime2",
                 nullable: true);
         }
@@ -31,12 +25,8 @@ namespace Infrastructure.Migrations
             ArgumentNullException.ThrowIfNull(migrationBuilder);
 
             _ = migrationBuilder.DropColumn(
-                name: "ResetToken",
-                table: "Users");
-
-            _ = migrationBuilder.DropColumn(
-                name: "ResetTokenExpires",
-                table: "Users");
+                name: "UpdatedAt",
+                table: "Comments");
         }
     }
 }

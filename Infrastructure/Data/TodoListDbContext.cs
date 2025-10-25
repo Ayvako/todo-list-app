@@ -2,7 +2,6 @@ using Core.Entities.Comment;
 using Core.Entities.Tag;
 using Core.Entities.Task;
 using Core.Entities.TodoList;
-using Core.Entities.TodoUser;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;

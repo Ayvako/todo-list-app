@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Interfaces;
@@ -33,7 +34,7 @@ public class TaskController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Details(int id)
+    public async Task<IActionResult> Details(int id, int? editingCommentId = null)
     {
         if (!this.ModelState.IsValid)
         {
@@ -45,6 +46,9 @@ public class TaskController : Controller
         {
             return this.NotFound();
         }
+
+        this.ViewData["EditingCommentId"] = editingCommentId;
+        this.ViewBag.UserId = this.GetUserId();
 
         return this.View(task);
     }
@@ -113,7 +117,7 @@ public class TaskController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id, string? returnUrl)
+    public async Task<IActionResult> Delete(int id, Uri? returnUrl)
     {
         if (!this.ModelState.IsValid)
         {
@@ -122,9 +126,9 @@ public class TaskController : Controller
 
         _ = await this.taskService.DeleteTaskAsync(id);
 
-        if (!string.IsNullOrEmpty(returnUrl))
+        if (!string.IsNullOrEmpty(returnUrl?.OriginalString))
         {
-            return this.Redirect(returnUrl);
+            return this.Redirect(returnUrl.OriginalString);
         }
 
         return this.RedirectToAction("Index");
@@ -160,7 +164,7 @@ public class TaskController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(TaskEditModel model, string? returnUrl)
+    public async Task<IActionResult> Edit(TaskEditModel model, Uri? returnUrl)
     {
         if (!this.ModelState.IsValid)
         {
@@ -180,9 +184,9 @@ public class TaskController : Controller
             return this.View(model);
         }
 
-        if (!string.IsNullOrEmpty(returnUrl))
+        if (!string.IsNullOrEmpty(returnUrl?.OriginalString))
         {
-            return this.Redirect(returnUrl);
+            return this.Redirect(returnUrl.OriginalString);
         }
 
         return this.RedirectToAction("Index");
@@ -190,7 +194,7 @@ public class TaskController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangeStatus(int id, ChangeStatusModel model, string? returnUrl)
+    public async Task<IActionResult> ChangeStatus(int id, ChangeStatusModel model, Uri? returnUrl)
     {
         if (!this.ModelState.IsValid)
         {
@@ -209,9 +213,9 @@ public class TaskController : Controller
             return this.NotFound($"Error ChangeStatus.");
         }
 
-        if (!string.IsNullOrEmpty(returnUrl))
+        if (!string.IsNullOrEmpty(returnUrl?.OriginalString))
         {
-            return this.Redirect(returnUrl);
+            return this.Redirect(returnUrl.OriginalString);
         }
 
         return this.RedirectToAction("Index");
@@ -227,5 +231,16 @@ public class TaskController : Controller
 
         var tasks = await this.taskService.GetTasksByTagAsync(tagName);
         return this.View(tasks);
+    }
+
+    private int GetUserId()
+    {
+        var idClaim = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(idClaim, NumberStyles.Integer, CultureInfo.InvariantCulture, out var userId))
+        {
+            throw new UnauthorizedAccessException("User is not authenticated.");
+        }
+
+        return userId;
     }
 }

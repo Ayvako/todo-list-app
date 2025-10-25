@@ -173,7 +173,7 @@ public class TaskWebApiService : ITaskWebApiService
         var result = await this.apiClientService.TryRequestAsync<IEnumerable<TaskWebApiModel?>>(
             () => this.httpClient.GetAsync($"api/Task/{tagName}"));
 
-        return result.Data;
+        return result?.Data ?? Enumerable.Empty<TaskWebApiModel>();
     }
 
     private void AttachToken()

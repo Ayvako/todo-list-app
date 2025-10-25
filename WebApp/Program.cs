@@ -27,6 +27,8 @@ internal static class Program
 
         var baseUrl = builder.Configuration["WebApi:BaseUrl"];
 
+        ArgumentNullException.ThrowIfNull(baseUrl);
+
         _ = builder.Services.AddHttpClient<ITodoListWebApiService, TodoListWebApiService>(client =>
             client.BaseAddress = new Uri(baseUrl));
 
@@ -37,6 +39,9 @@ internal static class Program
             client.BaseAddress = new Uri(baseUrl));
 
         _ = builder.Services.AddHttpClient<ITagWebApiService, TagWebApiService>(client =>
+            client.BaseAddress = new Uri(baseUrl));
+
+        _ = builder.Services.AddHttpClient<ITaskCommentWebApiService, TaskCommentWebApiService>(client =>
             client.BaseAddress = new Uri(baseUrl));
 
         _ = builder.Services.AddScoped<ApiClientService>();

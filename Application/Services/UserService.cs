@@ -24,6 +24,21 @@ public class UserService : IUserService
         return user == null ? null : user.ToDto();
     }
 
+    public async Task<Dictionary<int, UserDto>> GetByIdsAsync(IEnumerable<int> userIds)
+    {
+        var users = await this.userManager.Users
+            .Where(u => userIds.Contains(u.Id))
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                Email = u.Email
+            })
+            .ToDictionaryAsync(u => u.Id);
+
+        return users;
+    }
+
     public async Task<UserDto?> GetUserByNameAsync(string username)
     {
         var user = await this.userManager.Users.FirstOrDefaultAsync(u => u.UserName == username);

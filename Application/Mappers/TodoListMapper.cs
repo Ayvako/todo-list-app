@@ -10,6 +10,9 @@ public static class TodoListMapper
 {
     public static async Task<TodoListDto> ToDtoAsync(this TodoListEntity entity, int userId, IUserService userService)
     {
+        ArgumentNullException.ThrowIfNull(userService);
+        ArgumentNullException.ThrowIfNull(entity);
+
         bool canEdit =
             entity.OwnerId == userId ||
             entity.AccessList?.Any(a => a.UserId == userId && a.Role == TodoListAccessRole.Editor) == true;

@@ -1,13 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+namespace WebApp.Models.Comments;
 
-namespace Contracts.Tasks;
-
-public class TaskCommentDto
+public class TaskCommentModel
 {
     public int Id { get; set; }
 
-    [Required]
-    [StringLength(500)]
     public string Text { get; set; } = string.Empty;
 
     public string AuthorName { get; set; } = string.Empty;
@@ -17,8 +13,4 @@ public class TaskCommentDto
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
-
-
-    [Required]
-    public int TaskId { get; set; }
 }

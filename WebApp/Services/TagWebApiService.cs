@@ -47,7 +47,7 @@ public class TagWebApiService : ITagWebApiService
         var result = await this.apiClientService.TryRequestAsync<IEnumerable<TagModel?>>(
             () => this.httpClient.GetAsync($"api/Tag/tags"));
 
-        return result.Data;
+        return result.Data ?? Enumerable.Empty<TagModel>();
     }
 
     private void AttachToken()

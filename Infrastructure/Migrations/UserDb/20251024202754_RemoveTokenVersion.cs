@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,7 +10,9 @@ namespace Infrastructure.Migrations.UserDb
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
+            ArgumentNullException.ThrowIfNull(migrationBuilder);
+
+            _ = migrationBuilder.DropColumn(
                 name: "TokenVersion",
                 table: "AspNetUsers");
         }
@@ -18,7 +20,9 @@ namespace Infrastructure.Migrations.UserDb
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
+            ArgumentNullException.ThrowIfNull(migrationBuilder);
+
+            _ = migrationBuilder.AddColumn<int>(
                 name: "TokenVersion",
                 table: "AspNetUsers",
                 type: "int",

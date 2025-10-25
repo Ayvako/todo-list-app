@@ -42,8 +42,6 @@ public class TaskService : ITaskService
 
         var added = await this.repository.AddTaskAsync(todoListId, entity);
 
-        //added.Assignee ??= await this.userRepository.GetByIdAsync(userId);
-
         return await this.MapToDtoAsync(added, userId);
     }
 

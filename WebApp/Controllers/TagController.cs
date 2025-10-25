@@ -24,7 +24,7 @@ public class TagController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddTag(int taskId, TagModel model, string? returnUrl)
+    public async Task<IActionResult> AddTag(int taskId, TagModel model, Uri? returnUrl)
     {
         if (!this.ModelState.IsValid || model is null)
         {
@@ -32,12 +32,13 @@ public class TagController : Controller
         }
 
         _ = await this.tagService.AddTagAsync(taskId, model.Name);
-        return this.Redirect(returnUrl);
+        var redirectUrl = returnUrl?.OriginalString ?? this.Url.Action("Details", "Task", new { id = taskId });
+        return this.Redirect(redirectUrl!);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RemoveTag(int taskId, TagModel model, string? returnUrl)
+    public async Task<IActionResult> RemoveTag(int taskId, TagModel model, Uri? returnUrl)
     {
         if (!this.ModelState.IsValid || model is null)
         {
@@ -45,6 +46,7 @@ public class TagController : Controller
         }
 
         _ = await this.tagService.RemoveTagAsync(taskId, model.Name);
-        return this.Redirect(returnUrl);
+        var redirectUrl = returnUrl?.OriginalString ?? this.Url.Action("Details", "Task", new { id = taskId });
+        return this.Redirect(redirectUrl!);
     }
 }

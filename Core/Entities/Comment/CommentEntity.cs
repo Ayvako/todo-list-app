@@ -12,6 +12,8 @@ public class CommentEntity
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public DateTime? UpdatedAt { get; set; }
+
     public int TaskId { get; set; }
 
     public TaskEntity Task { get; set; } = null!;
