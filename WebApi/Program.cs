@@ -17,7 +17,7 @@ namespace WebApi;
 
 internal static class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -127,6 +127,13 @@ internal static class Program
                 });
         });
         var app = builder.Build();
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            var context = services.GetRequiredService<TodoListDbContext>();
+            var userManager = services.GetRequiredService<UserManager<UserEntity>>();
+            await DbInitializer.SeedAsync(context, userManager);
+        }
 
         if (app.Environment.IsDevelopment())
         {
@@ -143,6 +150,6 @@ internal static class Program
 
         _ = app.MapControllers();
 
-        app.Run();
+        await app.RunAsync();
     }
 }
