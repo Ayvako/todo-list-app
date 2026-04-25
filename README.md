@@ -25,7 +25,7 @@ Installation & Setup
 - Clone the repository:
 
 ``` 
-git clone https://github.com/your-username/project-alpha.git
+git clone https://github.com/Ayvako/todo-list-app.git
 ```
 - Configure Database: Update the connection string in appsettings.json.
 
